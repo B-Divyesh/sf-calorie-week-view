@@ -1,0 +1,22 @@
+CLAIM offline-reload: npm test -- --grep @claim:offline-reload
+EXIT 1
+CLAIM csv-export: npm test -- --grep @claim:csv-export
+EXIT 0
+CLAIM csv-import: npm test -- --grep @claim:csv-import
+EXIT 0
+CLAIM json-export: npm test -- --grep @claim:json-export
+EXIT 0
+CLAIM print-week: npm test -- --grep @claim:print-week
+EXIT 0
+CLAIM local-private: npm test -- --grep @claim:local-private
+EXIT 0
+CLAIM free-no-account: npm test -- --grep @claim:free-no-account
+EXIT 0
+CLAIM manual-entry: npm test -- --grep @claim:manual-entry
+EXIT 0
+CLAIM settings-choice: npm test -- --grep @claim:settings-choice
+EXIT 0
+CLAIM delete-log: npm test -- --grep @claim:delete-log
+EXIT 0
+CLAIM logged-day-average: npm test -- --grep @claim:logged-day-average
+EXIT 0
