@@ -1,4 +1,23 @@
-# Handoff — repair of independent QA findings
+# Handoff — independent verification 2
+
+## Current release decision: FAIL
+
+Candidate `ce47a4961f6e1977aa7afeff66e65d258c70306a` at
+<https://calorie-week-view.sociobot.in> is **not approved for release**. The
+complete independent report is [`.factory/verification-2.md`](verification-2.md).
+
+The verifier made no product-code changes. All 13 required claim commands,
+`npm test`, production build, repeated offline reloads, live privacy/header
+checks, mobile/desktop axe scans, and PWA update behavior passed. The release
+is blocked by **V2-01 (high)**: Import JSON backup accepts impossible dates and
+invalid settings/optional values as a successful import, persists them, and can
+make an entry invisible in the weekly view. Repair complete backup validation
+before IndexedDB writes, provide a recovery error, add a regression test, and
+request a new verification.
+
+---
+
+# Prior builder handoff — repair of independent QA findings
 
 ## Result
 
