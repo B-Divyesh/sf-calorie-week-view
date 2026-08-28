@@ -11,7 +11,7 @@ test('works offline after the first visit @claim:offline-reload', async ({ page,
   await page.waitForFunction(async () => {
     const script = document.querySelector<HTMLScriptElement>('script[type="module"]')?.src;
     const stylesheet = document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]')?.href;
-    const cache = await caches.open('calorie-week-view-v1.0.3');
+    const cache = await caches.open('calorie-week-view-v1.0.4');
     return Boolean(script && stylesheet && await cache.match(script, { ignoreVary: true }) && await cache.match(stylesheet, { ignoreVary: true }) && await cache.match('/demo', { ignoreVary: true }));
   });
   await context.setOffline(true);
