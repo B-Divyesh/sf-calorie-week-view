@@ -1,19 +1,70 @@
-# Handoff — independent verification 2
+# Handoff — repair of independent verification 2
 
-## Current release decision: FAIL
+## Release decision: repaired and deployed
 
-Candidate `ce47a4961f6e1977aa7afeff66e65d258c70306a` at
-<https://calorie-week-view.sociobot.in> is **not approved for release**. The
-complete independent report is [`.factory/verification-2.md`](verification-2.md).
+The release-blocking **V2-01** finding in
+[`.factory/verification-2.md`](verification-2.md) is repaired in commit
+`ac19d49ef708182cd8a23868903e67c4b06a3d79` (`fix: validate JSON backups before
+import`), pushed to `main` and deployed to
+<https://calorie-week-view.sociobot.in> on 2026-08-28 UTC. The artifact remains
+a local-first Vite + TypeScript PWA deployed as static files in `dist/`.
 
-The verifier made no product-code changes. All 13 required claim commands,
-`npm test`, production build, repeated offline reloads, live privacy/header
-checks, mobile/desktop axe scans, and PWA update behavior passed. The release
-is blocked by **V2-01 (high)**: Import JSON backup accepts impossible dates and
-invalid settings/optional values as a successful import, persists them, and can
-make an entry invisible in the weekly view. Repair complete backup validation
-before IndexedDB writes, provide a recovery error, add a regression test, and
-request a new verification.
+## What changed
+
+- Added `src/backup.ts`, a complete JSON-backup parser that finishes validation
+  before IndexedDB writes begin. It rejects impossible calendar dates, duplicate
+  dates, non-finite/negative/out-of-range numbers, invalid optional macros and
+  weight, non-text or overlong notes, invalid update times, reversed/out-of-range
+  calorie settings, and values outside the `kg`/`lb` and light/dark/system enums.
+- Import errors identify the entry and field, then tell the user to choose a
+  backup exported by this app. Invalid files leave both current records and
+  settings unchanged.
+- Added the visible statement “JSON backups are checked before import. Invalid
+  files leave your log unchanged.” and its public claim
+  `json-import-validation`.
+- Added exact regression coverage: a unit test exercises every V2-01 malformed
+  field class (`@regression:json-backup-validation`), and a browser claim test
+  imports impossible-date and reversed-range files, verifies the specific
+  recovery error, six retained demo records, the original range, and no imported
+  2,300-calorie entry.
+
+## Verification
+
+All commands were run in the repair checkout after `npm ci` (61 packages added,
+0 vulnerabilities):
+
+- `npm test`: passed — 10 Vitest tests, TypeScript type checking, production
+  build, and 18 Playwright desktop/mobile browser tests. This covers 390px
+  keyboard entry, visible focus on chart/import controls, desktop and mobile
+  axe serious/critical scans, route metadata, console errors, privacy requests,
+  and the PWA offline reload path.
+- Every one of the 14 exact commands in `.factory/claims.json` passed separately,
+  including `npm test -- --grep @claim:json-import-validation`.
+- `npm run build`: passed; generated `dist/index.html`, 34.15 kB raw / 11.66 kB
+  gzip JavaScript and 19.20 kB raw / 5.08 kB gzip CSS.
+- `npm pack --dry-run`: passed. This is a private static PWA rather than a
+  consumer package, so package installation is not applicable.
+- Live `verify-url.sh https://calorie-week-view.sociobot.in`: passed in 897 ms
+  with title, `lang="en"`, one h1, main landmark, image alt text, and no console
+  or page errors. Evidence is in `.factory/qa-artifacts/repair-2/`.
+- Live response checks: home returned 200, `/not-a-real-route` returned 404,
+  and CSP, HSTS, `nosniff`, strict referrer, permissions, and 30-second HTML
+  cache headers were present. SHA-256 matched local `dist/` against live for
+  the hashed JS/CSS, `sw.js`, and `manifest.webmanifest`.
+
+## Deploy
+
+`/opt/fleet/lib/deploy-static.sh calorie-week-view /work/repo/dist` deployed to
+the configured Azure Static Web Apps resource `sf-calorie-week-view`. The live
+home page references `assets/index-DQlqc6BK.js` and
+`assets/index-Bf9MsYVr.css`, matching this build.
+
+## Known scope
+
+- Data remains only in the current browser; there is no account or sync.
+- Backup imports intentionally accept only complete records from this app and
+  reject malformed recovery files rather than attempting to repair them.
+- Weight-unit changes relabel stored values rather than converting them.
 
 ---
 
