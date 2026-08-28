@@ -77,6 +77,13 @@
     "sandbox": "fresh browser context at /demo; import a JSON backup with an entry and settings, then assert its total, range, unit, and theme"
   },
   {
+    "id": "json-import-validation",
+    "claim": "Rejects invalid JSON backups without changing your log",
+    "where": "JSON backup import help",
+    "test": "npm test -- --grep @claim:json-import-validation",
+    "sandbox": "fresh browser context at /demo; import impossible-date and invalid-settings backups, then assert a field-specific recovery error and unchanged sample log"
+  },
+  {
     "id": "delete-log",
     "claim": "Deletes the whole local log",
     "where": "landing privacy section, review tools, privacy page, README",

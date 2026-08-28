@@ -22,7 +22,7 @@ or leave it without copying anything into the real log.
 - Add calories, optional macros, optional weight, and a note for each date.
 - Import CSV files with required `date` and `calories` columns.
 - Read a seven-day calorie chart, logged-day average, macros, and weight trend.
-- Export all entries to CSV or export entries and settings to JSON.
+- Export all entries to CSV or export entries and settings to JSON. Invalid JSON backups are rejected before they change your log.
 - Print the selected week.
 - Choose a light, dark, or device theme.
 - Delete the whole local log from the review screen.

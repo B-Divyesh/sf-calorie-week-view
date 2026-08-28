@@ -160,6 +160,30 @@ test('imports entries and settings from a JSON backup @claim:json-import', async
   await expect(page.getByLabel('Weight (lb)')).toBeVisible();
 });
 
+test('rejects invalid JSON backups without changing the log @claim:json-import-validation', async ({ page }) => {
+  await page.goto('/demo');
+  await page.locator('#json-input').setInputFiles({
+    name: 'impossible-date.json', mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({
+      settings: { calorieMin: 1800, calorieMax: 2200, weightUnit: 'kg', theme: 'system' },
+      records: [{ date: '2026-02-31', calories: 2300, protein: null, carbs: null, fat: null, weight: null, note: '', updatedAt: 1 }],
+    })),
+  });
+  await expect(page.getByText(/Entry 1 has an invalid date/)).toBeVisible();
+  await expect(page.getByText('6 of 7 days logged')).toBeVisible();
+  await page.locator('#json-input').setInputFiles({
+    name: 'bad-settings.json', mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({
+      settings: { calorieMin: 2500, calorieMax: 2000, weightUnit: 'stone', theme: 'chartreuse' },
+      records: [{ date: '2026-08-17', calories: 2300, protein: null, carbs: null, fat: null, weight: null, note: '', updatedAt: 1 }],
+    })),
+  });
+  await expect(page.getByText(/Backup settings have an invalid calorie range/)).toBeVisible();
+  await expect(page.getByText('6 of 7 days logged')).toBeVisible();
+  await expect(page.getByText('range 1,800–2,200')).toBeVisible();
+  await expect(page.getByRole('cell', { name: '2,300' })).toHaveCount(0);
+});
+
 test('clears every local record @claim:delete-log', async ({ page }) => {
   await page.goto('/demo');
   page.once('dialog', (dialog) => dialog.accept());

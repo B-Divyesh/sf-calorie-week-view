@@ -1,6 +1,7 @@
 import './styles.css';
 import { WeekStore } from './db';
 import { DEFAULT_SETTINGS, type DayRecord, type Settings } from './types';
+import { parseJSONBackup } from './backup';
 import {
   addDays, average, formatDay, formatWeekRange, localISO, parseCSV, parseLocalDate,
   rangeLabel, recordsToCSV, slotsForWeek, startOfWeek,
@@ -224,7 +225,7 @@ function reviewPage(): string {
 
     <section class="tools-section" aria-labelledby="tools-title"><div><p class="eyebrow">Your records</p><h2 id="tools-title">Import, export, or clear</h2></div>
       <div class="tool-groups">
-        <div><h3>Bring in entries</h3><p>CSV needs date and calories columns. Macros, weight, and note are optional.</p><label class="button secondary file-button">Import CSV<input id="csv-input" type="file" accept=".csv,text/csv" /></label><label class="text-link file-button">Import JSON backup<input id="json-input" type="file" accept=".json,application/json" /></label></div>
+        <div><h3>Bring in entries</h3><p>CSV needs date and calories columns. Macros, weight, and note are optional.</p><label class="button secondary file-button">Import CSV<input id="csv-input" type="file" accept=".csv,text/csv" /></label><label class="text-link file-button">Import JSON backup<input id="json-input" type="file" accept=".json,application/json" /></label><p class="import-note">JSON backups are checked before import. Invalid files leave your log unchanged.</p></div>
         <div><h3>Keep a copy</h3><p>CSV works in spreadsheets. JSON keeps entries and settings together.</p><button class="button secondary" data-action="export-csv">Export CSV</button><button class="text-button" data-action="export-json">Export JSON</button><button class="text-button" data-action="print-week">Print this week</button></div>
         <div><h3>Adjust the map</h3><p>Set your own calorie range, weight unit, and color theme.</p><button class="button secondary" data-action="open-settings">Change settings</button>${demoMode ? '<button class="danger-link" data-action="clear-demo">Clear demo records</button>' : '<button class="danger-link" data-action="delete-all">Delete my log</button>'}</div>
       </div>
@@ -460,10 +461,9 @@ async function importJSON(event: Event): Promise<void> {
   const file = input.files?.[0];
   if (!file || !store) return;
   try {
-    const backup = JSON.parse(await file.text()) as { records?: DayRecord[]; settings?: Settings };
-    if (!Array.isArray(backup.records) || !backup.records.every((record) => /^\d{4}-\d{2}-\d{2}$/.test(record.date) && Number.isFinite(record.calories))) throw new Error('This is not a Calorie Week View backup.');
+    const backup = parseJSONBackup(JSON.parse(await file.text()));
     await store.saveMany(backup.records);
-    if (backup.settings) { settings = { ...DEFAULT_SETTINGS, ...backup.settings }; await store.saveSettings(settings); }
+    if (backup.settings) { settings = backup.settings; await store.saveSettings(settings); }
     records = await store.records();
     if (backup.records.length) weekStart = startOfWeek(parseLocalDate(backup.records[0].date));
     applyTheme();
