@@ -1,0 +1,28 @@
+desktop visible true count 1
+{
+  "viewport": "desktop",
+  "url": "https://calorie-week-view.sociobot.in/demo",
+  "title": "Demo — Calorie Week View",
+  "h1": [
+    "Review your calorie week"
+  ],
+  "body": "Skip to main content\nDemo — sample data, nothing is saved to your log.\nReset demo\nStart for real\nCalorie\nWeek View\nReview\nDemo\nPrivacy\n\nSAMPLE WEEK\n\nReview your calorie week\n\nMissing days stay blank and do not lower your average.\n\n←\nAug 24–Aug 30, 2026\n→\nLogged-day average\n2,062 kcal\nInside your range\n6 of 7 days logged · range 1,800–2,200\nProtein average\n119 g\nOn logged values\nCarbs average\n228 g\nOn logged values\nFat average\n70 g\nOn logged values\n\nCONTOUR 01\n\nCalories across seven days\nYour range\n1980\nMon\nAug 24\n2140\nTue\nAug 25\n1870\nWed\nAug 26\n2250\nThu\nAug 27\n2050\nFri\nAug 28\nSat\nMissing\n2080\nSun\nAug 30\n\nCONTOUR 02\n\nOptional weight trend\nkg\n72.8\nMon\n72.6\nTue\n72.5\nThu\n72.3\nSun\n\nFIELD NOTES\n\nDaily entries\nAdd daily totals\nDay\nCalories\nMacros\nWeight\nAction\nMon\nAug 24\n1,980\nP 112g · C 221g · F 68g\n72.8 kg\nEdit\nNote: Lunch out\nTue\nAug 25\n2,140\nP 126g · C 240g · F 71g\n72.6 kg\nEdit\nWed\nAug 26\n1,870\nP 103g · C 198g · F 64g\n—\nEdit\nNote: Quiet day\nThu\nAug 27\n2,250\nP 131g · C 256g · F 76g\n72.5 kg\nEdit\nNote: Dinner with friends\nFri\nAug 28\n2,050\nP 118g · C 226g · F 69g\n—\nEdit\nSat\nAug 29\nMissing\n—\n—\nAdd\nSun\nAug 30\n2,080\nP 122g · C 229g · F 70g\n72.3 kg\nEdit\n\nYOUR RECORDS\n\nImport, export, or clear\nBring in entries\n\nCSV needs date and calories columns. Macros, weight, and note are optional.\n\nImport CSV\nImport JSON backup\nKeep a copy\n\nCSV works in spreadsheets. JSON keeps entries and settings together.\n\nExport CSVExport JSONPrint this week\nAdjust the map\n\nSet your own calorie range, weight unit, and color theme.\n\nChange settingsClear demo records\n\nSee your calorie week without a daily score.\n\nPrivacy\nTerms\nBuilt by Param Factory\n(external site)\n\nVersion 1.0.0 · Original generated map art\n\nReview your calorie week",
+  "errors": [],
+  "origins": [
+    "https://calorie-week-view.sociobot.in"
+  ]
+}
+mobile visible true count 1
+{
+  "viewport": "mobile",
+  "url": "https://calorie-week-view.sociobot.in/demo",
+  "title": "Demo — Calorie Week View",
+  "h1": [
+    "Review your calorie week"
+  ],
+  "body": "Skip to main content\nDemo — sample data, nothing is saved to your log.\nReset demo\nStart for real\nCalorie\nWeek View\nDemo\n\nSAMPLE WEEK\n\nReview your calorie week\n\nMissing days stay blank and do not lower your average.\n\n←\nAug 24–Aug 30, 2026\n→\nLogged-day average\n2,062 kcal\nInside your range\n6 of 7 days logged · range 1,800–2,200\nProtein average\n119 g\nOn logged values\nCarbs average\n228 g\nOn logged values\nFat average\n70 g\nOn logged values\n\nCONTOUR 01\n\nCalories across seven days\nYour range\n1980\nMon\nAug 24\n2140\nTue\nAug 25\n1870\nWed\nAug 26\n2250\nThu\nAug 27\n2050\nFri\nAug 28\nSat\nMissing\n2080\nSun\nAug 30\n\nCONTOUR 02\n\nOptional weight trend\nkg\n72.8\nMon\n72.6\nTue\n72.5\nThu\n72.3\nSun\n\nFIELD NOTES\n\nDaily entries\nAdd daily totals\nMon\nAug 24\n1,980\nP 112g · C 221g · F 68g\n72.8 kg\nEdit\nNote: Lunch out\nTue\nAug 25\n2,140\nP 126g · C 240g · F 71g\n72.6 kg\nEdit\nWed\nAug 26\n1,870\nP 103g · C 198g · F 64g\n—\nEdit\nNote: Quiet day\nThu\nAug 27\n2,250\nP 131g · C 256g · F 76g\n72.5 kg\nEdit\nNote: Dinner with friends\nFri\nAug 28\n2,050\nP 118g · C 226g · F 69g\n—\nEdit\nSat\nAug 29\nMissing\n—\n—\nAdd\nSun\nAug 30\n2,080\nP 122g · C 229g · F 70g\n72.3 kg\nEdit\n\nYOUR RECORDS\n\nImport, export, or clear\nBring in entries\n\nCSV needs date and calories columns. Macros, weight, and note are optional.\n\nImport CSV\nImport JSON backup\nKeep a copy\n\nCSV works in spreadsheets. JSON keeps entries and settings together.\n\nExport CSVExport JSONPrint this week\nAdjust the map\n\nSet your own calorie range, weight unit, and color theme.\n\nChange settingsClear demo records\n\nSee your calorie week without a daily score.\n\nPrivacy\nTerms\nBuilt by Param Factory\n(external site)\n\nVersion 1.0.0 · Original generated map art\n\nReview your calorie week",
+  "errors": [],
+  "origins": [
+    "https://calorie-week-view.sociobot.in"
+  ]
+}

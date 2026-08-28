@@ -1,0 +1,86 @@
+
+> calorie-week-view@1.0.0 test
+> npm run test:unit && npm run build && npm run test:e2e -- --grep @claim:offline-reload
+
+
+> calorie-week-view@1.0.0 test:unit
+> vitest run
+
+
+ RUN  v3.2.7 /work/repo
+
+ ✓ src/week.test.ts (6 tests) 7ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  17:32:36
+   Duration  1.13s (transform 100ms, setup 0ms, collect 110ms, tests 7ms, environment 0ms, prepare 179ms)
+
+
+> calorie-week-view@1.0.0 build
+> tsc --noEmit && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 7 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  1.91 kB │ gzip:  0.63 kB
+dist/assets/index-DYfyTR_m.css  18.88 kB │ gzip:  5.04 kB
+dist/assets/index-ns4iTWs6.js   31.59 kB │ gzip: 10.84 kB │ map: 68.84 kB
+✓ built in 440ms
+
+> calorie-week-view@1.0.0 test:e2e
+> playwright test --grep @claim:offline-reload
+
+[WebServer] (node:6421) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:6440) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:6453) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+(node:6473) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6473) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+F
+
+  1) [chromium] › tests/claims.spec.ts:4:1 › works offline after the first visit @claim:offline-reload 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('heading', { name: 'Review your calorie week' })
+    Expected: visible
+    Timeout: 7000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 7000ms[22m
+    [2m  - waiting for getByRole('heading', { name: 'Review your calorie week' })[22m
+
+
+      16 |   await context.setOffline(true);
+      17 |   await page.goto(page.url());
+    > 18 |   await expect(page.getByRole('heading', { name: 'Review your calorie week' })).toBeVisible();
+         |                                                                                 ^
+      19 |   await expect(page.getByText('2,062 kcal')).toBeVisible();
+      20 | });
+      21 |
+        at /work/repo/tests/claims.spec.ts:18:81
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/claims-works-offline-after-298ec--visit-claim-offline-reload-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/claims-works-offline-after-298ec--visit-claim-offline-reload-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/claims-works-offline-after-298ec--visit-claim-offline-reload-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › tests/claims.spec.ts:4:1 › works offline after the first visit @claim:offline-reload 
