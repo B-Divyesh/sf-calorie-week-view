@@ -1,3 +1,132 @@
+# Handoff — repair of independent verification 5
+
+## Release decision: repaired and deployed
+
+This repair addresses both release-blocking findings in independent verification
+5 for candidate `9a449dabb5ef069968a95fb69ffb63830bca060e`. The product remains
+the same local-first Vite + TypeScript PWA and static deployment class. The
+researched brief, topographic visual system, demo isolation, data model, and all
+18 previously passing product claims are preserved.
+
+### Repairs
+
+- **V5-01 — focus after successful changes:** `refreshReview()` now accepts a
+  logical successor and focuses it after the replacement DOM is painted. Week
+  navigation returns to the corresponding previous, current, or next-week
+  control. Saving an entry moves focus to that date's new **Edit** button.
+  Saving settings moves focus to **Change settings**. Successful dialog saves
+  also clear the obsolete pre-dialog return target, while Cancel, close, and
+  Escape retain their existing restoration behavior.
+- **V5-02 — real 404 shell and copy:** `404.html` now includes the standard skip
+  link, product header, main navigation, one main/h1, footer navigation, build
+  identity, metadata, self-hosted fonts, responsive topographic treatment,
+  visible focus, dark mode, and reduced-motion behavior. Its literal heading is
+  **Page not found**. The SPA fallback view uses the same literal wording.
+- **Installed-app delivery:** the release is `1.0.2`, the manifest starts at
+  `/app?v=1.0.2`, and the service-worker cache is
+  `calorie-week-view-v1.0.4`. This ensures installations running the verified
+  candidate receive the changed JavaScript and 404 shell. A deployment-contract
+  test keeps those three release identifiers aligned.
+
+The exact browser regressions are
+`@regression:successful-action-focus` and `@regression:404-shell`. Before the
+repair, the former failed with **Previous week** inactive after Enter and the
+latter found zero banner elements. After the repair, the first test exercises
+previous/current week changes, a keyboard-only 2,000-calorie save, and a
+1,900–2,300 settings save at 390×844. The second checks the static shell, literal
+heading, mobile overflow, and serious/critical axe results. The existing
+`@regression:real-404` contract continues to assert that unknown routes map to
+`404.html` without a navigation fallback.
+
+## Clean local verification
+
+Run from the final tree on August 28, 2026 UTC:
+
+```bash
+npm ci
+npm test
+npm run build
+npm pack --dry-run
+```
+
+- `npm ci`: PASS — 61 packages added, 62 audited, 0 vulnerabilities.
+- `npm test`: PASS — 15 Vitest unit/contract tests, TypeScript production
+  build, and 29 Chromium browser tests.
+- All 18 commands in `.factory/claims.json` were run separately in manifest
+  order after the final cache/version change. Every command selected one exact
+  claim test and passed.
+- `npm run build`: PASS with `dist/index.html`. Initial JavaScript is 36.59 kB
+  raw / 12.44 kB gzip; CSS is 19.42 kB raw / 5.10 kB gzip. Fonts total 46.97 kB
+  and the mobile hero WebP is 42.81 kB. All static budgets pass.
+- `npm pack --dry-run`: PASS. A consumer install is not applicable to this
+  private static PWA. There is no lint script; `tsc --noEmit` is part of every
+  build.
+- Local `verify-url.sh`: PASS in 577 ms with the correct title, `lang="en"`,
+  one h1/main, complete image alternatives, labelled buttons, and no console or
+  page errors. Evidence and 1440px/390px captures are under
+  `.factory/qa-artifacts/repair-5/local/`.
+- Local mobile Lighthouse: **98 performance / 100 accessibility / 100 best
+  practices / 100 SEO**; FCP 1.0 s, LCP 1.4 s, TBT 170 ms, CLS 0.002, and
+  64 KiB transferred.
+- A controlled update installed the changed worker, displayed “An update is
+  ready. Reload to use it.”, activated cache `calorie-week-view-v1.0.4`, and
+  retained the populated demo through an offline reload.
+
+## Deployment and final live evidence
+
+Repair commits `4a3e621` and `820c856` were pushed to `main`. The final build
+was deployed with:
+
+```bash
+/opt/fleet/lib/deploy-static.sh calorie-week-view /work/repo/dist
+```
+
+Azure Static Web Apps deployment
+`6f98d6c0-5ba7-42e8-a7d0-436f4fe394ac` succeeded on the configured
+`sf-calorie-week-view` resource. The custom domain
+<https://calorie-week-view.sociobot.in> returned HTTPS 200.
+
+- Final live `verify-url.sh`: PASS in 605 ms with title, language, one h1/main,
+  image-alt and button-name checks, and no console/page errors. Evidence is in
+  `.factory/qa-artifacts/repair-5/live/`.
+- A fresh live 390×844 keyboard flow used Enter for every changed action.
+  **Previous week** retained focus; **This week** retained focus; saving the
+  missing `2026-08-29` entry focused its **Edit** button; and saving settings
+  focused **Change settings**. The rendered results changed to 0/7, 6/7, 7/7,
+  and range 1,900–2,300 respectively.
+- `GET /not-a-route` returned HTTP 404 and rendered one header, main navigation,
+  main, footer, and **Page not found** h1, with no horizontal overflow at
+  390 px. Desktop demo, mobile demo, and mobile 404 axe scans each found zero
+  serious/critical violations.
+- The live flow made 19 requests across seven unique URLs. Every request was
+  same-origin; there were no analytics, trackers, third-party resources, failed
+  application requests, console errors, or page errors.
+- A fresh worker controlled `/demo`, cache `calorie-week-view-v1.0.4` was
+  present, and the populated review reloaded successfully with Chromium fully
+  offline.
+- `/`, `/demo`, `/app`, `/privacy`, `/terms`, the manifest, robots, sitemap,
+  and 192px icon returned 200. `/not-a-route` returned 404. Home and 404 both
+  send the self-only CSP with `frame-ancestors 'none'`, HSTS, `nosniff`, the
+  strict-origin referrer policy, disabled camera/microphone/geolocation, and a
+  30-second revalidation policy.
+- SHA-256 matched live versus `dist/` for `index.html`, hashed JavaScript/CSS,
+  `sw.js`, manifest, robots, sitemap, and the 404 response body.
+- Final live Lighthouse mobile: **100 performance / 100 accessibility / 100
+  best practices / 100 SEO**; FCP 1.1 s, LCP 1.1 s, TBT 0 ms, CLS 0.002, and
+  43 KiB transferred. The report is
+  `.factory/qa-artifacts/repair-5/live/lighthouse-mobile.json`.
+- This static PWA has no backend, API/unlock endpoint, account, payment flow,
+  or AI call. Rate limits, `Retry-After`, concurrency, server persistence,
+  health/build endpoints, Entra identity, and consumer-package installation are
+  not applicable.
+
+## Known gaps
+
+None within the researched brief. The product intentionally remains a
+single-browser local log without accounts or sync.
+
+---
+
 # Handoff — independent verification 5
 
 ## Release decision: FAIL
