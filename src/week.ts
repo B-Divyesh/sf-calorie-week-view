@@ -1,4 +1,5 @@
-import type { DayRecord, DaySlot, Settings } from './types';
+import type { DayRecord, DaySlot, Settings, WeightUnit } from './types';
+import { numericRecordIssue, type NumericRecordField } from './record-validation';
 
 const DAY_MS = 86_400_000;
 
@@ -63,7 +64,7 @@ export function formatDay(iso: string): { weekday: string; date: string } {
   };
 }
 
-export function parseCSV(source: string): DayRecord[] {
+export function parseCSV(source: string, defaultWeightUnit: WeightUnit = 'kg'): DayRecord[] {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = '';
@@ -100,13 +101,15 @@ export function parseCSV(source: string): DayRecord[] {
   if (columns.date < 0 || columns.calories < 0) {
     throw new Error('The CSV needs date and calories columns.');
   }
+  const importedWeightUnit: WeightUnit = columns.weight >= 0 && headers[columns.weight] === 'weightkg'
+    ? 'kg'
+    : columns.weight >= 0 && headers[columns.weight] === 'weightlb' ? 'lb' : defaultWeightUnit;
 
-  const optionalNumber = (value: string | undefined, rowNumber: number, column: string): number | null => {
+  const optionalNumber = (value: string | undefined, rowNumber: number, column: NumericRecordField): number | null => {
     if (!value) return null;
     const parsed = Number(value);
-    if (!Number.isFinite(parsed) || parsed < 0) {
-      throw new Error(`Row ${rowNumber} has an invalid ${column} value. Leave it blank or use a non-negative number.`);
-    }
+    const issue = numericRecordIssue(column, parsed);
+    if (issue) throw new Error(`Row ${rowNumber} has an invalid ${column} value. ${issue}`);
     return parsed;
   };
 
@@ -116,16 +119,20 @@ export function parseCSV(source: string): DayRecord[] {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(parseLocalDate(date).getTime()) || localISO(parseLocalDate(date)) !== date) {
       throw new Error(`Row ${rowIndex + 2} has an invalid date. Use YYYY-MM-DD.`);
     }
-    if (!Number.isFinite(calories) || calories < 0) {
-      throw new Error(`Row ${rowIndex + 2} has invalid calories.`);
-    }
+    const calorieIssue = numericRecordIssue('calories', calories);
+    if (calorieIssue) throw new Error(`Row ${rowIndex + 2} has invalid calories. ${calorieIssue}`);
+    const protein = columns.protein >= 0 ? optionalNumber(cells[columns.protein], rowIndex + 2, 'protein') : null;
+    const carbs = columns.carbs >= 0 ? optionalNumber(cells[columns.carbs], rowIndex + 2, 'carbs') : null;
+    const fat = columns.fat >= 0 ? optionalNumber(cells[columns.fat], rowIndex + 2, 'fat') : null;
+    const weight = columns.weight >= 0 ? optionalNumber(cells[columns.weight], rowIndex + 2, 'weight') : null;
     return {
       date,
-      calories: Math.round(calories),
-      protein: columns.protein >= 0 ? optionalNumber(cells[columns.protein], rowIndex + 2, 'protein') : null,
-      carbs: columns.carbs >= 0 ? optionalNumber(cells[columns.carbs], rowIndex + 2, 'carbs') : null,
-      fat: columns.fat >= 0 ? optionalNumber(cells[columns.fat], rowIndex + 2, 'fat') : null,
-      weight: columns.weight >= 0 ? optionalNumber(cells[columns.weight], rowIndex + 2, 'weight') : null,
+      calories,
+      protein,
+      carbs,
+      fat,
+      weight,
+      weightUnit: weight === null ? null : importedWeightUnit,
       note: columns.note >= 0 ? (cells[columns.note] ?? '').slice(0, 200) : '',
       updatedAt: Date.now(),
     } satisfies DayRecord;
@@ -137,10 +144,21 @@ const csvCell = (value: string | number | null) => {
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 
-export function recordsToCSV(records: DayRecord[]): string {
+export function convertWeight(value: number, from: WeightUnit, to: WeightUnit): number {
+  if (from === to) return value;
+  const converted = from === 'kg' ? value * 2.2046226218 : value / 2.2046226218;
+  return Math.round(converted * 10) / 10;
+}
+
+export function weightInUnit(record: DayRecord, unit: WeightUnit): number | null {
+  if (record.weight === null) return null;
+  return convertWeight(record.weight, record.weightUnit ?? unit, unit);
+}
+
+export function recordsToCSV(records: DayRecord[], weightUnit: WeightUnit = 'kg'): string {
   const header = 'date,calories,protein_g,carbs_g,fat_g,weight,note';
   const body = [...records].sort((a, b) => a.date.localeCompare(b.date)).map((record) =>
-    [record.date, record.calories, record.protein, record.carbs, record.fat, record.weight, record.note]
+    [record.date, record.calories, record.protein, record.carbs, record.fat, weightInUnit(record, weightUnit), record.note]
       .map(csvCell).join(','));
   return [header, ...body].join('\n');
 }

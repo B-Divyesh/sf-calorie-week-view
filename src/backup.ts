@@ -1,5 +1,6 @@
-import type { DayRecord, Settings } from './types';
+import type { DayRecord, Settings, WeightUnit } from './types';
 import { localISO, parseLocalDate } from './week';
+import { numericRecordIssue, type NumericRecordField } from './record-validation';
 
 export type CalorieWeekBackup = {
   records: DayRecord[];
@@ -20,35 +21,43 @@ function validDate(value: unknown): value is string {
   return Number.isFinite(date.getTime()) && localISO(date) === value;
 }
 
-function requiredNumber(value: unknown, index: number, field: string, maximum: number, integer = false): number {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > maximum || (integer && !Number.isSafeInteger(value))) {
-    invalidRecord(index, field, integer
-      ? `Use a whole number from 0 to ${maximum.toLocaleString()}.`
-      : `Use a number from 0 to ${maximum.toLocaleString()}.`);
-  }
-  return value;
+function recordNumber(value: unknown, index: number, field: NumericRecordField): number {
+  const issue = numericRecordIssue(field, value);
+  if (issue) invalidRecord(index, field, issue);
+  return value as number;
 }
 
-function optionalNumber(value: unknown, index: number, field: string, maximum: number): number | null {
+function optionalNumber(value: unknown, index: number, field: Exclude<NumericRecordField, 'calories'>): number | null {
   if (value === null) return null;
-  return requiredNumber(value, index, field, maximum);
+  return recordNumber(value, index, field);
 }
 
-function parseRecord(value: unknown, index: number): DayRecord {
+function parseRecord(value: unknown, index: number, fallbackWeightUnit: WeightUnit): DayRecord {
   if (!isObject(value)) throw new Error(`Entry ${index + 1} must be an object.`);
   if (!validDate(value.date)) invalidRecord(index, 'date', 'Use a real date in YYYY-MM-DD format.');
   if (typeof value.note !== 'string' || value.note.length > 200) {
     invalidRecord(index, 'note', 'Use text with 200 characters or fewer.');
   }
+  const weight = optionalNumber(value.weight, index, 'weight');
+  const weightUnit = value.weightUnit === undefined ? fallbackWeightUnit : value.weightUnit;
+  if (weight !== null && weightUnit !== 'kg' && weightUnit !== 'lb') {
+    invalidRecord(index, 'weight unit', 'Choose kg or lb.');
+  }
   return {
     date: value.date,
-    calories: requiredNumber(value.calories, index, 'calories', 20_000, true),
-    protein: optionalNumber(value.protein, index, 'protein', 1_000),
-    carbs: optionalNumber(value.carbs, index, 'carbs', 2_000),
-    fat: optionalNumber(value.fat, index, 'fat', 1_000),
-    weight: optionalNumber(value.weight, index, 'weight', 1_500),
+    calories: recordNumber(value.calories, index, 'calories'),
+    protein: optionalNumber(value.protein, index, 'protein'),
+    carbs: optionalNumber(value.carbs, index, 'carbs'),
+    fat: optionalNumber(value.fat, index, 'fat'),
+    weight,
+    weightUnit: weight === null ? null : weightUnit as WeightUnit,
     note: value.note,
-    updatedAt: requiredNumber(value.updatedAt, index, 'updated time', Number.MAX_SAFE_INTEGER, true),
+    updatedAt: (() => {
+      if (typeof value.updatedAt !== 'number' || !Number.isSafeInteger(value.updatedAt) || value.updatedAt < 0) {
+        invalidRecord(index, 'updated time', 'Use a non-negative whole number.');
+      }
+      return value.updatedAt;
+    })(),
   };
 }
 
@@ -69,16 +78,16 @@ function parseSettings(value: unknown): Settings {
  * This completes before any write is attempted, keeping a bad recovery file
  * from changing either records or settings.
  */
-export function parseJSONBackup(value: unknown): CalorieWeekBackup {
+export function parseJSONBackup(value: unknown, fallbackWeightUnit: WeightUnit = 'kg'): CalorieWeekBackup {
   if (!isObject(value) || !Array.isArray(value.records)) {
     throw new Error('This is not a Calorie Week View backup with a records list.');
   }
-  const records = value.records.map(parseRecord);
+  const settings = Object.hasOwn(value, 'settings') ? parseSettings(value.settings) : undefined;
+  const records = value.records.map((record, index) => parseRecord(record, index, settings?.weightUnit ?? fallbackWeightUnit));
   const dates = new Set<string>();
   for (const record of records) {
     if (dates.has(record.date)) throw new Error(`The backup repeats the date ${record.date}. Keep one entry for each date.`);
     dates.add(record.date);
   }
-  const settings = Object.hasOwn(value, 'settings') ? parseSettings(value.settings) : undefined;
   return { records, ...(settings ? { settings } : {}) };
 }

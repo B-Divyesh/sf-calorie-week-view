@@ -1,3 +1,102 @@
+# Handoff — repair of independent verification 4
+
+## Release decision: repaired locally, deployment pending
+
+This repair addresses every release-blocking finding in independent verification
+4 for candidate `4a129b5eca1ac9d243ee2b7192ec7349afe14880`. The product remains
+the same local-first Vite + TypeScript PWA and static deployment class. The
+researched brief, topographic visual identity, and previously passing behavior
+are preserved.
+
+### Repairs
+
+- **V4-01 — dialog cancellation:** both Cancel and × controls are now explicit
+  non-submit buttons. They close without native validation or writes, and the
+  dialog close path restores focus to its invoking control. The browser
+  regression `@regression:dialog-cancel` exercises empty and valid entry forms,
+  both settings exit controls, focus restoration, and unchanged IndexedDB values.
+- **V4-02 — demo disposal:** **Start for real** now closes and deletes
+  `demo:calorie-week-view` before opening the blank real log. Returning to
+  `/demo` creates a fresh sample. `@regression:demo-exit-discard` verifies the
+  edited range disappears, the demo database is absent after exit, and later
+  sample data uses default settings.
+- **V4-03 — mobile targets:** the blank-week action, text-style import action,
+  footer links, and privacy email now provide at least 44×44 CSS px targets.
+  `@regression:mobile-target-size` measures every visible link, button, form
+  control, and keyboard-scrolling region across `/`, `/demo`, `/privacy`,
+  `/terms`, and an open dialog at 390×844.
+- **V4-04 — consistent record bounds:** manual entry, CSV, and JSON now share
+  one numeric policy: calories 0–20,000 whole; protein/fat 0–1,000; carbs
+  0–2,000; weight 1–1,500. CSV parses and validates every row before the first
+  IndexedDB write. Unit and browser regressions cover each upper bound,
+  fractional calories, zero weight, the verifier's oversized row, and no
+  partial import.
+- **V4-05 — weight meaning:** each saved weight now includes its source unit.
+  Existing unitless records are migrated using their saved setting. Tables,
+  charts, editors, and CSV export convert for the chosen display unit without
+  changing the stored value. Old JSON backups infer the backup's unit. Both
+  `@regression:weight-unit-conversion` and the `settings-choice` claim verify
+  `72.8 kg` becomes `160.5 lb`, survives reload, and remains `72.8 kg` in
+  IndexedDB.
+
+The release is version `1.0.1`; the PWA cache is
+`calorie-week-view-v1.0.3` and the manifest start URL is `/app?v=1.0.1`.
+
+## Local verification evidence
+
+Run from the repaired tree on 2026-08-28 UTC:
+
+```bash
+npm ci
+npm test
+npm run build
+npm pack --dry-run
+```
+
+- Clean install: 61 packages added, 62 audited, 0 vulnerabilities.
+- `npm test`: PASS — 14 Vitest unit/contract tests and 27 Chromium browser
+  tests. The suite covers desktop, 390×844 mobile, keyboard and focus paths,
+  serious/critical axe checks, same-origin privacy, routes, console errors,
+  IndexedDB isolation, offline reload, and all five new regressions.
+- All 18 commands in `.factory/claims.json` were run separately in manifest
+  order. Each selected exactly one browser test and passed.
+- `npm run build`: PASS — `dist/index.html` exists. Initial JavaScript is
+  36.47 kB raw / 12.40 kB gzip; CSS is 19.42 kB raw / 5.10 kB gzip; both are
+  well below the static-product budgets.
+- `npm pack --dry-run`: PASS. Consumer installation does not apply to this
+  private static PWA.
+- Local `verify-url.sh`: PASS in 586 ms with the correct title, `lang="en"`,
+  one h1, main landmark, image alt text, labelled buttons, and no console/page
+  errors. Evidence and desktop/mobile captures are under
+  `.factory/qa-artifacts/repair-4/local/`.
+- Manual desktop and 390px browser smoke: no console errors, no third-party
+  requests, no horizontal overflow, first Tab exposes the skip link with a
+  visible outline, Enter focuses the h1, every visible interactive target is
+  at least 44 px in both dimensions, and reduced-motion animation duration is
+  `0.00001s`.
+- Local mobile Lighthouse: **100 performance / 100 accessibility / 100 best
+  practices / 100 SEO**; FCP 1.1 s, LCP 1.8 s, TBT 0 ms, CLS 0.033, total
+  transfer 129 KiB. Report:
+  `.factory/qa-artifacts/repair-4/local/lighthouse-mobile.json`.
+- Controlled production-build PWA update: the existing worker controlled the
+  demo, a changed worker displayed “An update is ready. Reload to use it.”,
+  cache `calorie-week-view-v1.0.4` activated, and the sample week reloaded while
+  offline afterward.
+- `src/deploy.test.ts` passes and guards the static response policy: known SPA
+  routes rewrite to `index.html`, unknown routes retain HTTP 404 behavior, and
+  required CSP/security headers are configured.
+
+## Deployment and live verification
+
+Pending the repair commit and static deployment for this work order.
+
+## Known gaps
+
+None within the researched brief. The product intentionally remains a
+single-browser local log without accounts or sync.
+
+---
+
 # Handoff — independent verification 4
 
 ## Release decision: FAIL

@@ -64,10 +64,10 @@
   },
   {
     "id": "settings-choice",
-    "claim": "Saves a user-chosen calorie range, weight unit, and color theme",
+    "claim": "Saves a user-chosen calorie range, weight unit, and color theme, and preserves recorded weight meaning across unit changes",
     "where": "review tools, README",
     "test": "npm test -- --grep '^.*@claim:settings-choice$'",
-    "sandbox": "fresh browser context at /demo; save a new range, pounds, and dark theme, reload, then assert all three persist"
+    "sandbox": "fresh browser context at /demo; save a new range, pounds, and dark theme, reload, then assert all three persist and kilogram records display as converted pounds"
   },
   {
     "id": "user-chosen-range",

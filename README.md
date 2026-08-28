@@ -14,8 +14,8 @@ the installed service worker can reload the app offline.
 
 Open `/demo` or
 <https://calorie-week-view.sociobot.in/demo>. It loads six realistic entries in
-an isolated `demo:calorie-week-view` database. The banner can reset the sample
-or leave it without copying anything into the real log.
+an isolated `demo:calorie-week-view` database. The banner can reset the sample.
+Choosing **Start for real** discards that demo database without copying it.
 
 ## Features
 
@@ -39,7 +39,8 @@ date,calories,protein_g,carbs_g,fat_g,weight,note
 2026-08-24,1980,112,221,68,72.8,Lunch out
 ```
 
-Weight uses the unit selected in settings.
+Weight uses the unit selected in settings. Changing units converts existing
+values for display while preserving their stored meaning.
 
 ## Run and test
 

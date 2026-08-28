@@ -1,6 +1,7 @@
 import { DEFAULT_SETTINGS, type DayRecord, type Settings } from './types';
 
 const DB_VERSION = 1;
+const databaseName = (demo: boolean) => demo ? 'demo:calorie-week-view' : 'calorie-week-view';
 
 export class WeekStore {
   private database: IDBDatabase | null = null;
@@ -12,9 +13,8 @@ export class WeekStore {
 
   private async db(): Promise<IDBDatabase> {
     if (this.database) return this.database;
-    const name = this.demo ? 'demo:calorie-week-view' : 'calorie-week-view';
     this.database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open(name, DB_VERSION);
+      const request = indexedDB.open(databaseName(this.demo), DB_VERSION);
       request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains('days')) db.createObjectStore('days', { keyPath: 'date' });
@@ -81,5 +81,15 @@ export class WeekStore {
   close(): void {
     this.database?.close();
     this.database = null;
+  }
+
+  async discard(): Promise<void> {
+    this.close();
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(databaseName(this.demo));
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+      request.onblocked = () => reject(new Error('Close other tabs using the demo, then choose Start for real again.'));
+    });
   }
 }

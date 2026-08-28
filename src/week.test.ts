@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { average, parseCSV, rangeLabel, recordsToCSV, slotsForWeek } from './week';
+import { average, convertWeight, parseCSV, rangeLabel, recordsToCSV, slotsForWeek, weightInUnit } from './week';
 import { DEFAULT_SETTINGS } from './types';
 import { parseJSONBackup } from './backup';
 
@@ -41,6 +41,17 @@ describe('CSV', () => {
       .toThrow('Row 2 has an invalid weight value');
   });
 
+  it('applies every manual-entry numeric bound to the whole CSV @regression:csv-record-bounds', () => {
+    const prefix = 'date,calories,protein,carbs,fat,weight\n';
+    expect(() => parseCSV(`${prefix}2026-08-24,20001,120,225,70,72.5`)).toThrow('invalid calories');
+    expect(() => parseCSV(`${prefix}2026-08-24,2050,1001,225,70,72.5`)).toThrow('invalid protein');
+    expect(() => parseCSV(`${prefix}2026-08-24,2050,120,2001,70,72.5`)).toThrow('invalid carbs');
+    expect(() => parseCSV(`${prefix}2026-08-24,2050,120,225,1001,72.5`)).toThrow('invalid fat');
+    expect(() => parseCSV(`${prefix}2026-08-24,2050,120,225,70,1501`)).toThrow('invalid weight');
+    expect(() => parseCSV(`${prefix}2026-08-24,2050.5,120,225,70,72.5`)).toThrow('invalid calories');
+    expect(() => parseCSV(`${prefix}2026-08-24,2050,120,225,70,0`)).toThrow('invalid weight');
+  });
+
   it('round trips records through export', () => {
     const records = parseCSV('date,calories,note\n2026-08-24,2050,"Dinner, out"');
     expect(parseCSV(recordsToCSV(records))[0]).toMatchObject({ date: '2026-08-24', calories: 2050, note: 'Dinner, out' });
@@ -50,7 +61,7 @@ describe('CSV', () => {
 describe('JSON backups', () => {
   const validBackup = {
     settings: { calorieMin: 1800, calorieMax: 2200, weightUnit: 'kg', theme: 'system' },
-    records: [{ date: '2026-08-24', calories: 2050, protein: 120, carbs: 225, fat: 70, weight: 72.5, note: 'Dinner', updatedAt: 1 }],
+    records: [{ date: '2026-08-24', calories: 2050, protein: 120, carbs: 225, fat: 70, weight: 72.5, weightUnit: 'kg', note: 'Dinner', updatedAt: 1 }],
   };
 
   it('accepts the complete shape exported by the app', () => {
@@ -68,5 +79,19 @@ describe('JSON backups', () => {
     expect(() => parseJSONBackup({ ...validBackup, settings: { ...validBackup.settings, calorieMin: 2500, calorieMax: 2000 } })).toThrow('Backup settings have an invalid calorie range');
     expect(() => parseJSONBackup({ ...validBackup, settings: { ...validBackup.settings, weightUnit: 'stone' } })).toThrow('Backup settings have an invalid weight unit');
     expect(() => parseJSONBackup({ ...validBackup, settings: { ...validBackup.settings, theme: 'chartreuse' } })).toThrow('Backup settings have an invalid color theme');
+  });
+
+  it('uses backup settings to migrate records exported before weight units were stored', () => {
+    const legacy = { ...validBackup, records: [{ ...validBackup.records[0], weightUnit: undefined }] };
+    expect(parseJSONBackup(legacy).records[0].weightUnit).toBe('kg');
+  });
+});
+
+describe('weight units', () => {
+  it('converts stored weight meaning without changing the source value @regression:weight-unit-conversion', () => {
+    const record = { date: '2026-08-24', calories: 2050, protein: null, carbs: null, fat: null, weight: 72.8, weightUnit: 'kg' as const, note: '', updatedAt: 1 };
+    expect(convertWeight(72.8, 'kg', 'lb')).toBe(160.5);
+    expect(weightInUnit(record, 'lb')).toBe(160.5);
+    expect(record).toMatchObject({ weight: 72.8, weightUnit: 'kg' });
   });
 });

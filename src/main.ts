@@ -2,16 +2,17 @@ import './styles.css';
 import { WeekStore } from './db';
 import { DEFAULT_SETTINGS, type DayRecord, type Settings } from './types';
 import { parseJSONBackup } from './backup';
+import { RECORD_NUMERIC_RULES, numericRecordIssue } from './record-validation';
 import {
   addDays, average, formatDay, formatWeekRange, localISO, parseCSV, parseLocalDate,
-  rangeLabel, recordsToCSV, slotsForWeek, startOfWeek,
+  rangeLabel, recordsToCSV, slotsForWeek, startOfWeek, weightInUnit,
 } from './week';
 
 const root = document.querySelector<HTMLDivElement>('#app');
 if (!root) throw new Error('App root is missing.');
 const app: HTMLDivElement = root;
 
-const BUILD_ID = '1.0.0';
+const BUILD_ID = '1.0.1';
 let store: WeekStore | null = null;
 let records: DayRecord[] = [];
 let settings: Settings = { ...DEFAULT_SETTINGS };
@@ -42,7 +43,7 @@ function navigate(path: string): void {
 function header(active: string): string {
   return `
     <a class="skip-link" href="#main">Skip to main content</a>
-    ${demoMode ? `<aside class="demo-banner" aria-label="Demo status"><span><strong>Demo</strong> — sample data, nothing is saved to your log.</span><span class="demo-actions"><button class="text-button" data-action="reset-demo">Reset demo</button><button class="text-button" data-route="/app">Start for real</button></span></aside>` : ''}
+    ${demoMode ? `<aside class="demo-banner" aria-label="Demo status"><span><strong>Demo</strong> — sample data, nothing is saved to your log.</span><span class="demo-actions"><button class="text-button" data-action="reset-demo">Reset demo</button><button class="text-button" data-action="start-real">Start for real</button></span></aside>` : ''}
     <header class="site-header">
       <a class="wordmark" href="/" data-route="/" aria-label="Calorie Week View home">
         <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M4 22c0-9 8-17 18-17s18 8 18 17-8 17-18 17S4 31 4 22Z"/><path d="M10 22c0-6 5-11 12-11s12 5 12 11-5 11-12 11-12-5-12-11Z"/><path d="M16 22c0-3 3-6 6-6s6 3 6 6-3 6-6 6-6-3-6-6Z"/></svg>
@@ -165,7 +166,8 @@ function sampleRecords(): DayRecord[] {
     [6, 2080, 122, 229, 70, 72.3, ''],
   ];
   return samples.map(([day, calories, protein, carbs, fat, weight, note]) => ({
-    date: localISO(addDays(start, day)), calories, protein, carbs, fat, weight, note, updatedAt: Date.now(),
+    date: localISO(addDays(start, day)), calories, protein, carbs, fat, weight,
+    weightUnit: weight === null ? null : 'kg', note, updatedAt: Date.now(),
   }));
 }
 
@@ -173,8 +175,16 @@ async function openReview(isDemo: boolean): Promise<void> {
   store?.close();
   demoMode = isDemo;
   store = new WeekStore(isDemo);
-  records = await store.records();
   settings = await store.settings();
+  records = await store.records();
+  const needsWeightUnitMigration = records.some((record) => record.weight !== null && record.weightUnit !== 'kg' && record.weightUnit !== 'lb');
+  if (needsWeightUnitMigration) {
+    records = records.map((record) => ({
+      ...record,
+      weightUnit: record.weight === null ? null : (record.weightUnit === 'kg' || record.weightUnit === 'lb' ? record.weightUnit : settings.weightUnit),
+    }));
+    await store.saveMany(records);
+  }
   if (isDemo && records.length === 0) {
     records = sampleRecords();
     await store.saveMany(records);
@@ -258,7 +268,11 @@ function calorieChart(slots: ReturnType<typeof slotsForWeek>): string {
 }
 
 function weightChart(slots: ReturnType<typeof slotsForWeek>): string {
-  const points = slots.flatMap((slot, index) => slot.record?.weight === null || slot.record?.weight === undefined ? [] : [{ index, value: slot.record.weight, date: slot.date }]);
+  const points = slots.flatMap((slot, index) => {
+    if (!slot.record) return [];
+    const value = weightInUnit(slot.record, settings.weightUnit);
+    return value === null ? [] : [{ index, value, date: slot.date }];
+  });
   if (points.length === 0) return `<div class="chart-empty"><span class="contour-mini" aria-hidden="true"></span><p>No weight values this week.</p><button class="text-button" data-action="add-entry">Add weight with a daily entry</button></div>`;
   const values = points.map((point) => point.value);
   const low = Math.min(...values) - 0.5;
@@ -273,7 +287,8 @@ function entriesTable(slots: ReturnType<typeof slotsForWeek>): string {
   return `<div class="entries-table" role="table" aria-label="Daily totals"><div class="entry-row entry-header" role="row"><span role="columnheader">Day</span><span role="columnheader">Calories</span><span role="columnheader">Macros</span><span role="columnheader">Weight</span><span role="columnheader">Action</span></div>${slots.map((slot) => {
     const day = formatDay(slot.date);
     const record = slot.record;
-    return `<div class="entry-row ${record ? '' : 'is-missing'}" role="row"><span role="cell"><strong>${day.weekday}</strong><small>${day.date}</small></span><span role="cell">${record ? record.calories.toLocaleString() : '<em>Missing</em>'}</span><span role="cell">${record ? macroLine(record) : '—'}</span><span role="cell">${record?.weight !== null && record?.weight !== undefined ? `${record.weight} ${settings.weightUnit}` : '—'}</span><span role="cell"><button class="text-button" data-action="edit-entry" data-date="${slot.date}">${record ? 'Edit' : 'Add'}</button></span>${record?.note ? `<span class="entry-note" role="cell">Note: ${escapeHTML(record.note)}</span>` : ''}</div>`;
+    const displayedWeight = record ? weightInUnit(record, settings.weightUnit) : null;
+    return `<div class="entry-row ${record ? '' : 'is-missing'}" role="row"><span role="cell"><strong>${day.weekday}</strong><small>${day.date}</small></span><span role="cell">${record ? record.calories.toLocaleString() : '<em>Missing</em>'}</span><span role="cell">${record ? macroLine(record) : '—'}</span><span role="cell">${displayedWeight !== null ? `${displayedWeight.toLocaleString(undefined, { maximumFractionDigits: 1 })} ${settings.weightUnit}` : '—'}</span><span role="cell"><button class="text-button" data-action="edit-entry" data-date="${slot.date}">${record ? 'Edit' : 'Add'}</button></span>${record?.note ? `<span class="entry-note" role="cell">Note: ${escapeHTML(record.note)}</span>` : ''}</div>`;
   }).join('')}</div>`;
 }
 
@@ -283,11 +298,11 @@ function macroLine(record: DayRecord): string {
 }
 
 function dialogs(): string {
-  return `<dialog id="entry-dialog" aria-labelledby="entry-dialog-title"><form id="entry-form" method="dialog"><div class="dialog-heading"><div><p class="eyebrow">Daily field note</p><h2 id="entry-dialog-title">Add daily totals</h2></div><button class="close-button" value="cancel" aria-label="Close entry form">×</button></div>
-    <div class="form-grid"><label class="full">Date<input name="date" type="date" required /></label><label class="full">Calories<input name="calories" type="number" min="0" max="20000" step="1" inputmode="numeric" required /><span>Required</span></label><label>Protein (g)<input name="protein" type="number" min="0" max="1000" step="0.1" inputmode="decimal" /></label><label>Carbs (g)<input name="carbs" type="number" min="0" max="2000" step="0.1" inputmode="decimal" /></label><label>Fat (g)<input name="fat" type="number" min="0" max="1000" step="0.1" inputmode="decimal" /></label><label>Weight (${settings.weightUnit})<input name="weight" type="number" min="1" max="1500" step="0.1" inputmode="decimal" /></label><label class="full">Note <span>(optional)</span><textarea name="note" maxlength="200" rows="2"></textarea></label></div>
-    <p id="entry-error" class="form-error" role="alert"></p><div class="dialog-actions"><button class="danger-link" type="button" data-action="delete-entry" hidden>Delete this entry</button><span></span><button class="button secondary" value="cancel">Cancel</button><button class="button primary" type="submit">Save daily totals</button></div></form></dialog>
-    <dialog id="settings-dialog" aria-labelledby="settings-dialog-title"><form id="settings-form" method="dialog"><div class="dialog-heading"><div><p class="eyebrow">Map settings</p><h2 id="settings-dialog-title">Choose your range</h2></div><button class="close-button" value="cancel" aria-label="Close settings">×</button></div><p>Enter a range you already use. This tool does not suggest one.</p>
-      <div class="form-grid"><label>Minimum calories<input name="calorieMin" type="number" min="0" max="20000" required value="${settings.calorieMin}" /></label><label>Maximum calories<input name="calorieMax" type="number" min="0" max="20000" required value="${settings.calorieMax}" /></label><label>Weight unit<select name="weightUnit"><option value="kg" ${settings.weightUnit === 'kg' ? 'selected' : ''}>Kilograms (kg)</option><option value="lb" ${settings.weightUnit === 'lb' ? 'selected' : ''}>Pounds (lb)</option></select></label><label>Color theme<select name="theme"><option value="system" ${settings.theme === 'system' ? 'selected' : ''}>Use device setting</option><option value="light" ${settings.theme === 'light' ? 'selected' : ''}>Light</option><option value="dark" ${settings.theme === 'dark' ? 'selected' : ''}>Dark</option></select></label></div><p id="settings-error" class="form-error" role="alert"></p><div class="dialog-actions"><span></span><button class="button secondary" value="cancel">Cancel</button><button class="button primary" type="submit">Save settings</button></div></form></dialog>`;
+  return `<dialog id="entry-dialog" aria-labelledby="entry-dialog-title"><form id="entry-form" method="dialog"><div class="dialog-heading"><div><p class="eyebrow">Daily field note</p><h2 id="entry-dialog-title">Add daily totals</h2></div><button class="close-button" type="button" data-action="close-dialog" aria-label="Close entry form">×</button></div>
+    <div class="form-grid"><label class="full">Date<input name="date" type="date" required /></label><label class="full">Calories<input name="calories" type="number" min="${RECORD_NUMERIC_RULES.calories.minimum}" max="${RECORD_NUMERIC_RULES.calories.maximum}" step="1" inputmode="numeric" required /><span>Required</span></label><label>Protein (g)<input name="protein" type="number" min="${RECORD_NUMERIC_RULES.protein.minimum}" max="${RECORD_NUMERIC_RULES.protein.maximum}" step="0.1" inputmode="decimal" /></label><label>Carbs (g)<input name="carbs" type="number" min="${RECORD_NUMERIC_RULES.carbs.minimum}" max="${RECORD_NUMERIC_RULES.carbs.maximum}" step="0.1" inputmode="decimal" /></label><label>Fat (g)<input name="fat" type="number" min="${RECORD_NUMERIC_RULES.fat.minimum}" max="${RECORD_NUMERIC_RULES.fat.maximum}" step="0.1" inputmode="decimal" /></label><label>Weight (${settings.weightUnit})<input name="weight" type="number" min="${RECORD_NUMERIC_RULES.weight.minimum}" max="${RECORD_NUMERIC_RULES.weight.maximum}" step="0.1" inputmode="decimal" /></label><label class="full">Note <span>(optional)</span><textarea name="note" maxlength="200" rows="2"></textarea></label></div>
+    <p id="entry-error" class="form-error" role="alert"></p><div class="dialog-actions"><button class="danger-link" type="button" data-action="delete-entry" hidden>Delete this entry</button><span></span><button class="button secondary" type="button" data-action="close-dialog">Cancel</button><button class="button primary" type="submit">Save daily totals</button></div></form></dialog>
+    <dialog id="settings-dialog" aria-labelledby="settings-dialog-title"><form id="settings-form" method="dialog"><div class="dialog-heading"><div><p class="eyebrow">Map settings</p><h2 id="settings-dialog-title">Choose your range</h2></div><button class="close-button" type="button" data-action="close-dialog" aria-label="Close settings">×</button></div><p>Enter a range you already use. This tool does not suggest one.</p>
+      <div class="form-grid"><label>Minimum calories<input name="calorieMin" type="number" min="0" max="20000" required value="${settings.calorieMin}" /></label><label>Maximum calories<input name="calorieMax" type="number" min="0" max="20000" required value="${settings.calorieMax}" /></label><label>Weight unit<select name="weightUnit"><option value="kg" ${settings.weightUnit === 'kg' ? 'selected' : ''}>Kilograms (kg)</option><option value="lb" ${settings.weightUnit === 'lb' ? 'selected' : ''}>Pounds (lb)</option></select></label><label>Color theme<select name="theme"><option value="system" ${settings.theme === 'system' ? 'selected' : ''}>Use device setting</option><option value="light" ${settings.theme === 'light' ? 'selected' : ''}>Light</option><option value="dark" ${settings.theme === 'dark' ? 'selected' : ''}>Dark</option></select></label></div><p id="settings-error" class="form-error" role="alert"></p><div class="dialog-actions"><span></span><button class="button secondary" type="button" data-action="close-dialog">Cancel</button><button class="button primary" type="submit">Save settings</button></div></form></dialog>`;
 }
 
 async function renderRoute(focusHeading = false): Promise<void> {
@@ -326,7 +341,11 @@ function bindPageEvents(): void {
   document.querySelector<HTMLInputElement>('#json-input')?.addEventListener('change', (event) => void importJSON(event));
   document.querySelector<HTMLFormElement>('#entry-form')?.addEventListener('submit', (event) => void saveEntry(event));
   document.querySelector<HTMLFormElement>('#settings-form')?.addEventListener('submit', (event) => void saveSettings(event));
-  document.querySelectorAll<HTMLDialogElement>('dialog').forEach((dialog) => dialog.addEventListener('close', () => returnFocus?.focus()));
+  document.querySelectorAll<HTMLDialogElement>('dialog').forEach((dialog) => dialog.addEventListener('close', () => {
+    const target = returnFocus;
+    returnFocus = null;
+    requestAnimationFrame(() => { if (target?.isConnected) target.focus(); });
+  }));
 }
 
 async function handleAction(element: HTMLElement): Promise<void> {
@@ -337,13 +356,15 @@ async function handleAction(element: HTMLElement): Promise<void> {
   else if (action === 'add-entry') openEntry(localISO(new Date()));
   else if (action === 'edit-entry') openEntry(element.dataset.date ?? localISO(new Date()));
   else if (action === 'open-settings') openDialog('settings-dialog', element);
-  else if (action === 'export-csv') download('calorie-week-view.csv', recordsToCSV(records), 'text/csv');
+  else if (action === 'export-csv') download('calorie-week-view.csv', recordsToCSV(records, settings.weightUnit), 'text/csv');
   else if (action === 'export-json') download('calorie-week-view-backup.json', JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), settings, records }, null, 2), 'application/json');
   else if (action === 'print-week') window.print();
   else if (action === 'delete-entry') await deleteEntry();
   else if (action === 'delete-all') await deleteAll();
   else if (action === 'clear-demo') await clearDemo();
   else if (action === 'reset-demo') await resetDemo();
+  else if (action === 'close-dialog') element.closest('dialog')?.close('cancel');
+  else if (action === 'start-real') await startForReal();
 }
 
 function openDialog(id: string, trigger: HTMLElement): void {
@@ -362,7 +383,7 @@ function openEntry(date: string): void {
     field.value = value === null ? '' : String(value);
   };
   set('date', date); set('calories', record?.calories ?? ''); set('protein', record?.protein ?? '');
-  set('carbs', record?.carbs ?? ''); set('fat', record?.fat ?? ''); set('weight', record?.weight ?? ''); set('note', record?.note ?? '');
+  set('carbs', record?.carbs ?? ''); set('fat', record?.fat ?? ''); set('weight', record ? weightInUnit(record, settings.weightUnit) : ''); set('note', record?.note ?? '');
   const title = dialog.querySelector('#entry-dialog-title');
   if (title) title.textContent = record ? 'Edit daily totals' : 'Add daily totals';
   const deleteButton = dialog.querySelector<HTMLButtonElement>('[data-action="delete-entry"]');
@@ -382,10 +403,25 @@ async function saveEntry(event: SubmitEvent): Promise<void> {
   const form = event.currentTarget as HTMLFormElement;
   if (!form.reportValidity()) return;
   const data = new FormData(form);
+  const numericValues = {
+    calories: Number(data.get('calories')),
+    protein: optionalFormNumber(data, 'protein'),
+    carbs: optionalFormNumber(data, 'carbs'),
+    fat: optionalFormNumber(data, 'fat'),
+    weight: optionalFormNumber(data, 'weight'),
+  };
+  const numericError = (Object.entries(numericValues) as Array<[keyof typeof numericValues, number | null]>)
+    .find(([field, value]) => value !== null && numericRecordIssue(field, value));
+  if (numericError) {
+    const error = document.querySelector('#entry-error');
+    if (error) error.textContent = `The ${numericError[0]} value is invalid. ${numericRecordIssue(numericError[0], numericError[1])}`;
+    return;
+  }
   const record: DayRecord = {
-    date: String(data.get('date')), calories: Number(data.get('calories')),
-    protein: optionalFormNumber(data, 'protein'), carbs: optionalFormNumber(data, 'carbs'), fat: optionalFormNumber(data, 'fat'),
-    weight: optionalFormNumber(data, 'weight'), note: String(data.get('note') ?? '').trim().slice(0, 200), updatedAt: Date.now(),
+    date: String(data.get('date')), calories: numericValues.calories,
+    protein: numericValues.protein, carbs: numericValues.carbs, fat: numericValues.fat,
+    weight: numericValues.weight, weightUnit: numericValues.weight === null ? null : settings.weightUnit,
+    note: String(data.get('note') ?? '').trim().slice(0, 200), updatedAt: Date.now(),
   };
   await store.save(record);
   records = await store.records();
@@ -441,12 +477,26 @@ async function clearDemo(): Promise<void> {
   await refreshReview('Cleared all demo records.');
 }
 
+async function startForReal(): Promise<void> {
+  try {
+    if (store?.demo) await store.discard();
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : 'The demo could not be closed. Close other demo tabs and try again.', true);
+    return;
+  }
+  store = null;
+  records = [];
+  settings = { ...DEFAULT_SETTINGS };
+  demoMode = false;
+  navigate('/app');
+}
+
 async function importCSV(event: Event): Promise<void> {
   const input = event.currentTarget as HTMLInputElement;
   const file = input.files?.[0];
   if (!file || !store) return;
   try {
-    const imported = parseCSV(await file.text());
+    const imported = parseCSV(await file.text(), settings.weightUnit);
     await store.saveMany(imported); records = await store.records();
     weekStart = startOfWeek(parseLocalDate(imported[0].date));
     await refreshReview(`Imported ${imported.length} ${imported.length === 1 ? 'entry' : 'entries'} from CSV.`);
@@ -461,7 +511,7 @@ async function importJSON(event: Event): Promise<void> {
   const file = input.files?.[0];
   if (!file || !store) return;
   try {
-    const backup = parseJSONBackup(JSON.parse(await file.text()));
+    const backup = parseJSONBackup(JSON.parse(await file.text()), settings.weightUnit);
     await store.saveMany(backup.records);
     if (backup.settings) { settings = backup.settings; await store.saveSettings(settings); }
     records = await store.records();

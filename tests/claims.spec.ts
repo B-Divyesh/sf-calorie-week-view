@@ -11,7 +11,7 @@ test('works offline after the first visit @claim:offline-reload', async ({ page,
   await page.waitForFunction(async () => {
     const script = document.querySelector<HTMLScriptElement>('script[type="module"]')?.src;
     const stylesheet = document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]')?.href;
-    const cache = await caches.open('calorie-week-view-v1.0.2');
+    const cache = await caches.open('calorie-week-view-v1.0.3');
     return Boolean(script && stylesheet && await cache.match(script, { ignoreVary: true }) && await cache.match(stylesheet, { ignoreVary: true }) && await cache.match('/demo', { ignoreVary: true }));
   });
   await context.setOffline(true);
@@ -128,6 +128,11 @@ test('saves a chosen range, weight unit, and dark theme @claim:settings-choice',
   await dialog.getByRole('button', { name: 'Save settings' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.getByText('range 1,900–2,300')).toBeVisible();
+  await expect(page.getByRole('cell', { name: '160.5 lb' })).toBeVisible();
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.getByText('range 1,900–2,300')).toBeVisible();
+  await expect(page.getByRole('cell', { name: '160.5 lb' })).toBeVisible();
   await expect.poll(() => page.evaluate(async () => new Promise<Record<string, unknown>>((resolve, reject) => {
     const request = indexedDB.open('demo:calorie-week-view');
     request.onerror = () => reject(request.error);
@@ -321,4 +326,143 @@ test('reports invalid optional CSV cells and leaves the log unchanged', async ({
   });
   await expect(page.getByText(/Row 2 has an invalid protein value/)).toBeVisible();
   await expect(page.getByText('6 of 7 days logged')).toBeVisible();
+});
+
+test('Cancel and close leave both forms unchanged and restore focus @regression:dialog-cancel', async ({ page }) => {
+  await page.goto('/demo');
+  const missingAdd = page.locator('.entry-row.is-missing').getByRole('button', { name: 'Add' });
+
+  await missingAdd.click();
+  const entryDialog = page.getByRole('dialog', { name: 'Add daily totals' });
+  const missingDate = await entryDialog.getByLabel('Date').inputValue();
+  await entryDialog.getByRole('button', { name: 'Cancel' }).click();
+  await expect(entryDialog).toBeHidden();
+  await expect(missingAdd).toBeFocused();
+
+  await missingAdd.click();
+  await entryDialog.getByRole('spinbutton', { name: 'Calories Required' }).fill('2111');
+  await entryDialog.getByRole('button', { name: 'Close entry form' }).click();
+  await expect(entryDialog).toBeHidden();
+  await expect(missingAdd).toBeFocused();
+  expect(await page.evaluate(async (date) => new Promise<unknown>((resolve, reject) => {
+    const request = indexedDB.open('demo:calorie-week-view');
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const result = request.result.transaction('days', 'readonly').objectStore('days').get(date);
+      result.onsuccess = () => resolve(result.result);
+      result.onerror = () => reject(result.error);
+    };
+  }), missingDate)).toBeUndefined();
+
+  const settingsTrigger = page.getByRole('button', { name: 'Change settings' });
+  for (const closeName of ['Cancel', 'Close settings']) {
+    await settingsTrigger.click();
+    const settingsDialog = page.getByRole('dialog', { name: 'Choose your range' });
+    await settingsDialog.getByLabel('Minimum calories').fill(closeName === 'Cancel' ? '1111' : '1234');
+    await settingsDialog.getByLabel('Maximum calories').fill(closeName === 'Cancel' ? '2222' : '2345');
+    await settingsDialog.getByRole('button', { name: closeName }).click();
+    await expect(settingsDialog).toBeHidden();
+    await expect(settingsTrigger).toBeFocused();
+  }
+  await expect(page.getByText('range 1,800–2,200')).toBeVisible();
+  expect(await page.evaluate(async () => new Promise<unknown>((resolve, reject) => {
+    const request = indexedDB.open('demo:calorie-week-view');
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const result = request.result.transaction('settings', 'readonly').objectStore('settings').get('main');
+      result.onsuccess = () => resolve(result.result);
+      result.onerror = () => reject(result.error);
+    };
+  }))).toMatchObject({ calorieMin: 1800, calorieMax: 2200 });
+});
+
+test('Start for real discards the demo database and reseeds a later demo @regression:demo-exit-discard', async ({ page }) => {
+  await page.goto('/demo');
+  await page.getByRole('button', { name: 'Change settings' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Choose your range' });
+  await dialog.getByLabel('Minimum calories').fill('1234');
+  await dialog.getByLabel('Maximum calories').fill('2345');
+  await dialog.getByRole('button', { name: 'Save settings' }).click();
+  await expect(page.getByText('range 1,234–2,345')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Start for real' }).click();
+  await expect(page).toHaveURL(/\/app$/);
+  await expect(page.getByText('0 of 7 days logged')).toBeVisible();
+  expect(await page.evaluate(async () => (await indexedDB.databases()).map((database) => database.name))).not.toContain('demo:calorie-week-view');
+
+  await page.goto('/demo');
+  await expect(page.getByText('range 1,800–2,200')).toBeVisible();
+  await expect(page.getByText('6 of 7 days logged')).toBeVisible();
+});
+
+test('every interactive target is at least 44 by 44 CSS pixels at 390px @regression:mobile-target-size', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const route of ['/', '/demo', '/privacy', '/terms']) {
+    await page.goto(route);
+    const undersized = await page.locator('a[href], button, input, select, textarea, [tabindex="0"]').evaluateAll((elements) => elements.flatMap((element) => {
+      const style = getComputedStyle(element);
+      if (style.display === 'none' || style.visibility === 'hidden' || element.closest('dialog:not([open])')) return [];
+      const box = element.getBoundingClientRect();
+      return box.width < 44 || box.height < 44
+        ? [{ label: element.getAttribute('aria-label') || element.textContent?.trim() || element.getAttribute('name'), width: box.width, height: box.height }]
+        : [];
+    }));
+    expect(undersized, `${route} has undersized interactive targets`).toEqual([]);
+  }
+
+  await page.goto('/demo');
+  await page.getByRole('button', { name: 'Add daily totals' }).click();
+  const dialogTargets = await page.getByRole('dialog').locator('button, input, select, textarea').evaluateAll((elements) => elements.flatMap((element) => {
+    if (getComputedStyle(element).display === 'none' || (element as HTMLElement).hidden) return [];
+    const box = element.getBoundingClientRect();
+    return box.width < 44 || box.height < 44 ? [{ name: element.getAttribute('name') || element.textContent, width: box.width, height: box.height }] : [];
+  }));
+  expect(dialogTargets).toEqual([]);
+});
+
+test('rejects every oversized CSV field without partial writes @regression:csv-record-bounds', async ({ page }) => {
+  await page.goto('/demo');
+  await page.locator('#csv-input').setInputFiles({
+    name: 'oversized.csv', mimeType: 'text/csv',
+    buffer: Buffer.from('date,calories,protein,carbs,fat,weight\n2026-08-17,1999,100,200,70,72\n2026-08-18,20001,1001,2001,1001,1501'),
+  });
+  await expect(page.getByText(/Row 3 has invalid calories.*20,000/)).toBeVisible();
+  expect(await page.evaluate(async () => new Promise<number>((resolve, reject) => {
+    const request = indexedDB.open('demo:calorie-week-view');
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const result = request.result.transaction('days', 'readonly').objectStore('days').count();
+      result.onsuccess = () => resolve(result.result);
+      result.onerror = () => reject(result.error);
+    };
+  }))).toBe(6);
+  await expect(page.getByText('6 of 7 days logged')).toBeVisible();
+});
+
+test('changing weight units converts display while preserving stored meaning @regression:weight-unit-conversion', async ({ page }) => {
+  await page.goto('/demo');
+  await expect(page.getByRole('cell', { name: '72.8 kg' })).toBeVisible();
+  await page.getByRole('button', { name: 'Change settings' }).click();
+  const settingsDialog = page.getByRole('dialog', { name: 'Choose your range' });
+  await settingsDialog.getByLabel('Weight unit').selectOption('lb');
+  await settingsDialog.getByRole('button', { name: 'Save settings' }).click();
+  await expect(page.getByRole('cell', { name: '160.5 lb' })).toBeVisible();
+
+  const stored = await page.evaluate(async () => new Promise<Record<string, unknown>>((resolve, reject) => {
+    const request = indexedDB.open('demo:calorie-week-view');
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const transaction = request.result.transaction('days', 'readonly');
+      const result = transaction.objectStore('days').getAll();
+      result.onsuccess = () => resolve(result.result.find((record) => record.weight === 72.8));
+      result.onerror = () => reject(result.error);
+    };
+  }));
+  expect(stored).toMatchObject({ weight: 72.8, weightUnit: 'kg' });
+
+  await page.getByRole('cell', { name: '160.5 lb' }).locator('..').getByRole('button', { name: 'Edit' }).click();
+  await expect(page.getByLabel('Weight (lb)')).toHaveValue('160.5');
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await page.reload();
+  await expect(page.getByRole('cell', { name: '160.5 lb' })).toBeVisible();
 });

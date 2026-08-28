@@ -5,14 +5,17 @@ export type DayRecord = {
   carbs: number | null;
   fat: number | null;
   weight: number | null;
+  weightUnit: WeightUnit | null;
   note: string;
   updatedAt: number;
 };
 
+export type WeightUnit = 'kg' | 'lb';
+
 export type Settings = {
   calorieMin: number;
   calorieMax: number;
-  weightUnit: 'kg' | 'lb';
+  weightUnit: WeightUnit;
   theme: 'light' | 'dark' | 'system';
 };
 
