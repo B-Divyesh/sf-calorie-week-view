@@ -152,7 +152,7 @@ function infoPage(kind: 'privacy' | 'terms'): string {
 
 function notFoundPage(): string {
   setMetadata('Page not found — Calorie Week View', 'Return to Calorie Week View.', '/404');
-  return page(`<main id="main" class="not-found contour-field"><p class="elevation">Elevation — 404</p><h1 tabindex="-1">This trail ends here</h1><p>The page does not exist. Your saved log is unchanged.</p><a class="button primary" href="/" data-route="/">Return home</a></main>`);
+  return page(`<main id="main" class="not-found contour-field"><h1 tabindex="-1">Page not found</h1><p>This page does not exist. Your saved log is unchanged.</p><a class="button primary" href="/" data-route="/">Return home</a></main>`);
 }
 
 function sampleRecords(): DayRecord[] {
@@ -351,8 +351,12 @@ function bindPageEvents(): void {
 async function handleAction(element: HTMLElement): Promise<void> {
   const action = element.dataset.action;
   if (action === 'previous-week' || action === 'next-week') {
-    weekStart = addDays(weekStart, action === 'previous-week' ? -7 : 7); await refreshReview();
-  } else if (action === 'this-week') { weekStart = startOfWeek(new Date()); await refreshReview(); }
+    weekStart = addDays(weekStart, action === 'previous-week' ? -7 : 7);
+    await refreshReview(undefined, `[data-action="${action}"]`);
+  } else if (action === 'this-week') {
+    weekStart = startOfWeek(new Date());
+    await refreshReview(undefined, '[data-action="this-week"]');
+  }
   else if (action === 'add-entry') openEntry(localISO(new Date()));
   else if (action === 'edit-entry') openEntry(element.dataset.date ?? localISO(new Date()));
   else if (action === 'open-settings') openDialog('settings-dialog', element);
@@ -425,9 +429,13 @@ async function saveEntry(event: SubmitEvent): Promise<void> {
   };
   await store.save(record);
   records = await store.records();
+  returnFocus = null;
   document.querySelector<HTMLDialogElement>('#entry-dialog')?.close();
   weekStart = startOfWeek(parseLocalDate(record.date));
-  await refreshReview(`Saved totals for ${formatDay(record.date).date}.`);
+  await refreshReview(
+    `Saved totals for ${formatDay(record.date).date}.`,
+    `[data-action="edit-entry"][data-date="${CSS.escape(record.date)}"]`,
+  );
 }
 
 async function saveSettings(event: SubmitEvent): Promise<void> {
@@ -445,8 +453,9 @@ async function saveSettings(event: SubmitEvent): Promise<void> {
   }
   settings = { calorieMin: minimum, calorieMax: maximum, weightUnit: data.get('weightUnit') as Settings['weightUnit'], theme: data.get('theme') as Settings['theme'] };
   await store.saveSettings(settings); applyTheme();
+  returnFocus = null;
   document.querySelector<HTMLDialogElement>('#settings-dialog')?.close();
-  await refreshReview('Saved your settings.');
+  await refreshReview('Saved your settings.', '[data-action="open-settings"]');
 }
 
 async function deleteEntry(): Promise<void> {
@@ -531,9 +540,12 @@ function download(filename: string, content: string, type: string): void {
   showToast(`Downloaded ${filename}.`);
 }
 
-async function refreshReview(message?: string): Promise<void> {
+async function refreshReview(message?: string, focusSelector?: string): Promise<void> {
   app.innerHTML = reviewPage(); bindPageEvents();
-  if (message) requestAnimationFrame(() => showToast(message));
+  if (message || focusSelector) requestAnimationFrame(() => {
+    if (message) showToast(message);
+    if (focusSelector) document.querySelector<HTMLElement>(focusSelector)?.focus();
+  });
 }
 
 function showToast(message: string, error = false): void {

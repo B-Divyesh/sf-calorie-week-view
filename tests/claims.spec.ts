@@ -301,6 +301,56 @@ test('supports a 390px keyboard entry path with optional fields @claim:manual-en
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
+test('successful week, entry, and settings changes keep keyboard focus @regression:successful-action-focus', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/demo');
+
+  await page.getByRole('button', { name: 'Previous week' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('0 of 7 days logged')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Previous week' })).toBeFocused();
+
+  await page.locator('[data-action="this-week"]').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('6 of 7 days logged')).toBeVisible();
+  await expect(page.locator('[data-action="this-week"]')).toBeFocused();
+
+  const missingAdd = page.locator('.entry-row.is-missing').getByRole('button', { name: 'Add' });
+  await missingAdd.focus();
+  await page.keyboard.press('Enter');
+  const entryDialog = page.getByRole('dialog', { name: 'Add daily totals' });
+  const savedDate = await entryDialog.getByLabel('Date').inputValue();
+  await entryDialog.getByRole('spinbutton', { name: 'Calories Required' }).fill('2000');
+  await entryDialog.getByRole('button', { name: 'Save daily totals' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('7 of 7 days logged')).toBeVisible();
+  await expect(page.locator(`[data-action="edit-entry"][data-date="${savedDate}"]`)).toBeFocused();
+
+  await page.getByRole('button', { name: 'Change settings' }).focus();
+  await page.keyboard.press('Enter');
+  const settingsDialog = page.getByRole('dialog', { name: 'Choose your range' });
+  await settingsDialog.getByLabel('Minimum calories').fill('1900');
+  await settingsDialog.getByLabel('Maximum calories').fill('2300');
+  await settingsDialog.getByRole('button', { name: 'Save settings' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('range 1,900–2,300')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Change settings' })).toBeFocused();
+});
+
+test('the static 404 uses the standard shell and literal copy @regression:404-shell', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/404.html');
+  await expect(page.getByRole('banner')).toHaveCount(1);
+  await expect(page.getByRole('navigation', { name: 'Main navigation' })).toHaveCount(1);
+  await expect(page.getByRole('main')).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toHaveCount(1);
+  await expect(page.getByRole('contentinfo')).toHaveCount(1);
+  await expect(page.getByRole('link', { name: 'Return home' })).toBeVisible();
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations.filter((item) => ['serious', 'critical'].includes(item.impact ?? ''))).toEqual([]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 test('makes mobile chart scrollers, import controls, and footer links visibly keyboard reachable', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/demo');
@@ -416,7 +466,7 @@ test('Start for real discards the demo database and reseeds a later demo @regres
 
 test('every interactive target is at least 44 by 44 CSS pixels at 390px @regression:mobile-target-size', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  for (const route of ['/', '/demo', '/privacy', '/terms']) {
+  for (const route of ['/', '/demo', '/privacy', '/terms', '/404.html']) {
     await page.goto(route);
     const undersized = await page.locator('a[href], button, input, select, textarea, [tabindex="0"]').evaluateAll((elements) => elements.flatMap((element) => {
       const style = getComputedStyle(element);
