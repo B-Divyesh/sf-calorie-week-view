@@ -1,0 +1,19 @@
+CLAIM_END offline-reload exit=0
+CLAIM_END csv-export exit=0
+CLAIM_END csv-import exit=0
+CLAIM_END json-export exit=0
+CLAIM_END print-week exit=0
+CLAIM_END local-private exit=0
+CLAIM_END no-ads-tracking-third-party exit=0
+CLAIM_END free-no-account exit=0
+CLAIM_END manual-entry exit=0
+CLAIM_END settings-choice exit=0
+CLAIM_END user-chosen-range exit=0
+CLAIM_END no-daily-score exit=0
+CLAIM_END no-food-search-or-coaching exit=0
+CLAIM_END no-medical-advice exit=0
+CLAIM_END json-import exit=0
+CLAIM_END json-import-validation exit=0
+CLAIM_END delete-log exit=0
+CLAIM_END logged-day-average exit=0
+CLAIM_FAILURE_COUNT 0

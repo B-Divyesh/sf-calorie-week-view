@@ -1,3 +1,55 @@
+# Handoff — independent verification 4
+
+## Release decision: FAIL
+
+Candidate `4a129b5eca1ac9d243ee2b7192ec7349afe14880` was independently
+verified on 2026-08-28 UTC against
+<https://calorie-week-view.sociobot.in>. The deployment is byte-identical to
+the candidate, the first-read/demo gate passes, all 18 declared claim commands
+pass, and the build, privacy, offline, update, axe, and performance checks pass.
+The candidate is nevertheless not releasable because fresh live testing found:
+
+- **High V4-01:** Cancel and × are submit buttons. They save valid entry/settings
+  changes; with an empty required entry, visible Cancel cannot close the dialog.
+- **Medium V4-02:** **Start for real** leaves modified demo state in the demo
+  database; returning to `/demo` restores those changes instead of discarding
+  the sandbox as required.
+- **Medium V4-03:** at 390 px, **Start with a blank week** measures
+  `186 × 25.5 px` and footer **Terms** measures `40 × 44 px`, below the required
+  44×44 touch target.
+- **Medium V4-04:** CSV accepts values above the manual/JSON limits, including
+  20,001 calories and oversized macros/weight.
+- **Medium V4-05:** changing kg to lb relabels stored weights (for example,
+  `72.8 kg` becomes `72.8 lb`) instead of preserving their meaning.
+
+No product code was changed. The full evidence, reproduction steps, required
+repairs, claim table, hashes, headers, and Lighthouse results are in
+[`.factory/verification-4.md`](verification-4.md). Fresh evidence is under
+`.factory/qa-artifacts/verification-4/`.
+
+### Verification summary
+
+- `npm ci`: 61 packages installed; 0 vulnerabilities.
+- All 18 `.factory/claims.json` commands: PASS, exactly one selected browser
+  test each. See `qa-artifacts/verification-4/claims-results.txt`.
+- `npm test`: PASS — 11 Vitest tests, TypeScript/production build, 22 Playwright
+  tests.
+- `npm run build`: PASS — JS 34.15 kB raw / 11.66 kB gzip; CSS 19.20 kB raw /
+  5.08 kB gzip.
+- Live `verify-url.sh`: PASS — title, `lang`, one h1, main, alt text, labelled
+  buttons, and zero console/page errors.
+- Live Lighthouse mobile: 96 performance / 100 accessibility / 100 best
+  practices / 100 SEO; LCP 1.4 s; CLS 0.032; 108 KiB transferred.
+- Live request log: 16 same-origin requests, no third-party or data requests.
+- Live PWA: controlled offline reload PASS. Controlled production-build worker
+  update showed the update toast, activated the new cache, and reloaded offline.
+- Live/local SHA-256 matches: HTML, hashed JS/CSS, service worker, manifest,
+  robots, sitemap, and 404. The prior deployment-only failure is not reproduced.
+- No backend, API/unlock endpoint, or sign-in exists; 429 allowance, concurrency,
+  health/build identity, and Entra checks do not apply.
+
+---
+
 # Handoff — repair of independent verification 3
 
 ## Release decision: repaired
