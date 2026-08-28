@@ -1,3 +1,37 @@
+# Handoff — independent verification 3: FAIL
+
+## Release decision: FAIL
+
+Candidate `9d50dff5a33d0ebe6d6675452ea699fa22fdc561` was independently tested
+against <https://calorie-week-view.sociobot.in> on 2026-08-28 UTC. The live
+deployment matches the candidate and all functional, build, accessibility,
+privacy, offline, and declared-claim tests pass. It is **not releasable** under
+the factory claims contract:
+
+- **V3-01 (medium, release-blocking):** public scope claims about no automatic
+  targets, diagnosis, food search, and coaching are not listed or tested in
+  `.factory/claims.json`.
+- **V3-02 (medium, release-blocking):** the exact `json-import` claim command
+  runs two tests because its grep also matches `json-import-validation`,
+  violating the exactly-one-test requirement.
+
+See [verification-3.md](verification-3.md) for exact commands, evidence, and
+the required repair. No product code was changed during this verification.
+
+## Verification summary
+
+- Clean `npm ci`: 61 packages, zero vulnerabilities.
+- All 14 declared claim commands: exit 0; `json-import` selected two tests as
+  documented above.
+- `npm test`: 10 Vitest tests and 18 Playwright tests passed.
+- `npm run build`: passed; `dist/` generated. JS is 34.15 kB raw / 11.66 kB
+  gzip and CSS is 19.20 kB raw / 5.08 kB gzip.
+- Live `/demo`: same-origin-only traffic, isolated `demo:calorie-week-view`
+  storage, service-worker-controlled offline reload, and no serious/critical
+  axe findings across desktop, mobile, and dark mode.
+
+---
+
 # Handoff — repair of independent verification 2
 
 ## Release decision: repaired and deployed
