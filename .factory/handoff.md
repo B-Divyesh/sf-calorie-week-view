@@ -70,8 +70,31 @@ npm pack --dry-run
 
 ## Deployment
 
-The production deploy and post-deploy response, privacy, offline, and identity
-checks are recorded below once complete.
+Commit `147dab0` (`fix: isolate public claims coverage`) was pushed to `main`
+and deployed with:
+
+```bash
+/opt/fleet/lib/deploy-static.sh calorie-week-view /work/repo/dist
+```
+
+The configured Azure Static Web Apps resource `sf-calorie-week-view` completed
+deployment `31f24a66-13bf-4370-8d7b-e841ba78c5f7`; the custom domain
+<https://calorie-week-view.sociobot.in> returned HTTPS 200 afterward.
+
+Post-deploy evidence:
+
+- Live `verify-url.sh` passed with no console/page errors, title, language,
+  one h1, main landmark, and image-alt checks. Its desktop/mobile screenshots
+  and JSON output are in `.factory/qa-artifacts/repair-3/live/`.
+- `/demo` returned 200 and `/not-a-route` returned a real **404**. The live
+  response carried the restrictive CSP, HSTS, `nosniff`, strict referrer, and
+  permissions headers, plus 30-second HTML revalidation.
+- SHA-256 matched live versus `dist/` for the hashed JS and CSS,
+  `sw.js`, and `manifest.webmanifest`.
+- In a fresh live browser context, all requests were same-origin; service
+  worker control enabled an offline `/demo` reload with the sample week; no
+  page errors occurred; and the 390×844 view had no horizontal overflow.
+- Live 390px axe-core found **0 serious/critical violations**.
 
 ---
 
