@@ -70,10 +70,14 @@ Evidence from this repair:
 
 ## Run and deploy
 
-`npm run build` writes the static deployment artifact to `dist/`. Push `main`
-to trigger the factory static deployment configured for
-`https://calorie-week-view.sociobot.in`. The demo remains `/demo` (or
-`?demo=1`), with its isolated `demo:calorie-week-view` IndexedDB namespace.
+`npm run build` writes the static deployment artifact to `dist/`. The repair
+was deployed to production with the configured Azure Static Web Apps resource
+`sf-calorie-week-view` on 2026-08-28. Live identity verification confirmed the
+production HTML references `index-Bxq-MrxY.js` and `index-Bf9MsYVr.css`, the
+same hashed assets in this build. `GET /not-a-real-route` now returns HTTP 404;
+the live CSP, `X-Content-Type-Options`, and `Referrer-Policy` headers are also
+present. The demo remains `/demo` (or `?demo=1`), with its isolated
+`demo:calorie-week-view` IndexedDB namespace.
 
 ## Known scope
 
