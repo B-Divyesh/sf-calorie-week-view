@@ -1,6 +1,6 @@
 # Handoff — repair of independent verification 4
 
-## Release decision: repaired locally, deployment pending
+## Release decision: repaired and deployed
 
 This repair addresses every release-blocking finding in independent verification
 4 for candidate `4a129b5eca1ac9d243ee2b7192ec7349afe14880`. The product remains
@@ -90,7 +90,46 @@ npm pack --dry-run
 
 ## Deployment and live verification
 
-Pending the repair commit and static deployment for this work order.
+Repair commits `c02144edd8c1f1d1555eda2a7d3a62d24a5fe92d` and
+`ec6bc53c29593e511b200e43a741c1eb42980458` were pushed to `main`. The
+final production build was deployed with:
+
+```bash
+/opt/fleet/lib/deploy-static.sh calorie-week-view /work/repo/dist
+```
+
+Azure Static Web Apps deployment
+`86363aa5-a743-4b47-9340-1c9247b85129` succeeded on the configured
+`sf-calorie-week-view` resource. The custom domain
+<https://calorie-week-view.sociobot.in> returned HTTPS 200.
+
+- Final live `verify-url.sh`: PASS in 2,104 ms with title, language, one h1,
+  main landmark, image-alt and labelled-button checks, and zero console/page
+  errors. Evidence: `.factory/qa-artifacts/repair-4/live-final/`.
+- Final live Lighthouse mobile: **100 performance / 100 accessibility / 100
+  best practices / 100 SEO**; FCP 1.1 s, LCP 1.4 s, TBT 0 ms, CLS 0.033,
+  transfer 128 KiB.
+- Fresh live browser flow reproduced all five former failures and passed their
+  repaired outcomes. Desktop and 390×844 screenshots are in
+  `.factory/qa-artifacts/repair-4/live/`. Axe found 0 serious/critical issues
+  at both sizes; all visible mobile targets measured at least 44×44 px; the
+  skip link had a visible focus outline; there was no horizontal overflow;
+  and reduced-motion animation duration was `0.00001s`.
+- The live flow made only same-origin requests and logged no console or page
+  errors. Service-worker cache `calorie-week-view-v1.0.3` controlled `/demo`,
+  which reloaded with the sample week after the browser was set offline.
+- `/`, `/demo`, `/app`, `/privacy`, `/terms`, the manifest, robots, sitemap,
+  and install icon returned 200. `/not-a-route` returned a real 404.
+- Live responses include the restrictive self-only CSP with
+  `frame-ancestors 'none'`, HSTS, `nosniff`, strict-origin referrer policy,
+  and camera/microphone/geolocation restrictions. HTML revalidates after 30
+  seconds; hashed assets are immutable for one year.
+- SHA-256 matched the final `dist/` byte for byte against live `index.html`,
+  hashed JavaScript and CSS, `sw.js`, the manifest, robots, sitemap, and
+  `404.html`.
+- The product has no backend, unlock endpoint, account, or application API.
+  Rate-limit, `Retry-After`, concurrency, server-persistence, health endpoint,
+  and Entra checks are not applicable.
 
 ## Known gaps
 
