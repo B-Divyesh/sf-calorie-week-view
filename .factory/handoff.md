@@ -1,3 +1,45 @@
+# Handoff — independent verification 6
+
+## Release decision: PASS
+
+Candidate `698ddbf26852cd56d05b17c60c8c78b47a296b20` was independently verified
+on 2026-08-28 UTC against https://calorie-week-view.sociobot.in. No product code
+was modified during verification. The live hashed JS/CSS asset names match the
+fresh local `dist/` build, so the deployment matches this candidate.
+
+- `.factory/claims.json` exists. All 18 listed commands were run serially from
+  the clean checkout after `npm ci`, through `/demo`; all passed. A separate
+  `npx playwright test --grep '@claim' --reporter=list` run passed all 18 in
+  26.7 seconds.
+- `npm test` passed: 15 unit/contract tests, production TypeScript build, and
+  29 Chromium tests. The 11 non-claim browser tests and final weight-conversion
+  regression were also re-run independently and passed. `npm run build` creates
+  `dist/`; first-load JS is 12.44 kB gzip and CSS 5.10 kB gzip.
+- The cold live first screen plainly states the weekly calorie-review job, its
+  food-logger audience, and its **Try it with sample data** action. One click
+  opens the isolated, realistic sample week.
+- Live desktop, 390px mobile, keyboard, reduced-motion, invalid CSV/settings,
+  privacy request log, headers, cache policy, response 404, manifest, service
+  worker update/reload, and offline demo reload all passed. Axe found zero
+  serious/critical issues in desktop, mobile, and dark-theme live scans.
+- The demo made only same-origin requests and opened only
+  `demo:calorie-week-view`. The PWA worker controlled `/demo`, cached it in
+  `calorie-week-view-v1.0.4`, and rendered the populated week after a fully
+  offline reload.
+
+This static PWA has no server product endpoint, unlock call, payment, account,
+external IdP, backend persistence, package API, or CLI. Rate limits/429,
+concurrency, Entra, and consumer-install checks do not apply.
+
+Detailed evidence: `.factory/verification-6.md`; screenshots and verify-url
+report: `.factory/verification-artifacts/verify6-*`.
+
+## Known gaps
+
+None found within the researched brief or acceptance contract.
+
+---
+
 # Handoff — repair of independent verification 5
 
 ## Release decision: repaired and deployed
