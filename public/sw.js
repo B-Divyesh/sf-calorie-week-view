@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calorie-week-view-v1.0.0';
+const CACHE_NAME = 'calorie-week-view-v1.0.1';
 const SHELL = [
   '/', '/app', '/demo', '/privacy', '/terms', '/offline.html', '/static.css',
   '/manifest.webmanifest', '/icons/favicon.svg', '/icons/icon-192.png',
@@ -9,10 +9,18 @@ const SHELL = [
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    await cache.addAll(SHELL);
-    const html = await (await fetch('/')).text();
+    await Promise.all(SHELL.map(async (path) => {
+      const response = await fetch(path, { cache: 'reload' });
+      if (!response.ok) throw new Error(`Could not cache ${path}`);
+      await cache.put(path, response);
+    }));
+    const html = await (await fetch('/', { cache: 'reload' })).text();
     const builtAssets = [...html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map((match) => match[1]);
-    if (builtAssets.length) await cache.addAll(builtAssets);
+    await Promise.all(builtAssets.map(async (path) => {
+      const response = await fetch(path, { cache: 'reload' });
+      if (!response.ok) throw new Error(`Could not cache ${path}`);
+      await cache.put(path, response);
+    }));
   })());
   self.skipWaiting();
 });

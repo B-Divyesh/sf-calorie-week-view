@@ -1,0 +1,79 @@
+[
+  {
+    "id": "offline-reload",
+    "claim": "Works offline after the first visit",
+    "where": "landing facts, README",
+    "test": "npm test -- --grep @claim:offline-reload",
+    "sandbox": "fresh browser context at /demo; load once, set the context offline, reload, and assert the sample week"
+  },
+  {
+    "id": "csv-export",
+    "claim": "Exports the log as CSV",
+    "where": "review toolbar, README",
+    "test": "npm test -- --grep @claim:csv-export",
+    "sandbox": "fresh browser context at /demo; assert the downloaded header and six sample rows"
+  },
+  {
+    "id": "csv-import",
+    "claim": "Imports daily totals from CSV",
+    "where": "landing how-it-works, review tools, README",
+    "test": "npm test -- --grep @claim:csv-import",
+    "sandbox": "fresh browser context at /demo; import a one-row CSV and assert its totals and note"
+  },
+  {
+    "id": "json-export",
+    "claim": "Exports entries and settings as a JSON backup",
+    "where": "landing how-it-works, review tools, README",
+    "test": "npm test -- --grep @claim:json-export",
+    "sandbox": "fresh browser context at /demo; parse the download and assert the sample entries and range"
+  },
+  {
+    "id": "print-week",
+    "claim": "Opens a printable view of the selected week",
+    "where": "landing how-it-works, review tools, README",
+    "test": "npm test -- --grep @claim:print-week",
+    "sandbox": "fresh browser context at /demo; replace the browser print function and assert the action calls it"
+  },
+  {
+    "id": "local-private",
+    "claim": "Your log stays in this browser and demo data is separate",
+    "where": "landing facts, privacy page, README",
+    "test": "npm test -- --grep @claim:local-private",
+    "sandbox": "fresh browser context at /demo; save an entry, assert only same-origin requests and only the demo IndexedDB name"
+  },
+  {
+    "id": "free-no-account",
+    "claim": "Free, with no account or payment gate",
+    "where": "landing facts, README",
+    "test": "npm test -- --grep @claim:free-no-account",
+    "sandbox": "fresh browser context at /demo; assert there is no password field, purchase link, subscription, or payment copy"
+  },
+  {
+    "id": "manual-entry",
+    "claim": "Adds daily calories and optional macros, weight, and notes",
+    "where": "landing how-it-works, review editor, README",
+    "test": "npm test -- --grep @claim:manual-entry",
+    "sandbox": "fresh 390px browser context at /demo; use the keyboard to edit and save a daily entry"
+  },
+  {
+    "id": "settings-choice",
+    "claim": "Saves a user-chosen calorie range, weight unit, and color theme",
+    "where": "review tools, README",
+    "test": "npm test -- --grep @claim:settings-choice",
+    "sandbox": "fresh browser context at /demo; save a new range and dark theme, then assert both appear"
+  },
+  {
+    "id": "delete-log",
+    "claim": "Deletes the whole local log",
+    "where": "landing privacy section, review tools, privacy page, README",
+    "test": "npm test -- --grep @claim:delete-log",
+    "sandbox": "fresh browser context at /demo; clear the isolated demo database and assert zero logged days"
+  },
+  {
+    "id": "logged-day-average",
+    "claim": "Missing days stay blank and averages use only logged days",
+    "where": "landing preview, weekly review, README",
+    "test": "npm test -- --grep @claim:logged-day-average",
+    "sandbox": "fresh browser context at /demo; assert six logged days average to 2,062 and land inside the sample range"
+  }
+]

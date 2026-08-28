@@ -226,7 +226,7 @@ function reviewPage(): string {
       <div class="tool-groups">
         <div><h3>Bring in entries</h3><p>CSV needs date and calories columns. Macros, weight, and note are optional.</p><label class="button secondary file-button">Import CSV<input id="csv-input" type="file" accept=".csv,text/csv" /></label><label class="text-link file-button">Import JSON backup<input id="json-input" type="file" accept=".json,application/json" /></label></div>
         <div><h3>Keep a copy</h3><p>CSV works in spreadsheets. JSON keeps entries and settings together.</p><button class="button secondary" data-action="export-csv">Export CSV</button><button class="text-button" data-action="export-json">Export JSON</button><button class="text-button" data-action="print-week">Print this week</button></div>
-        <div><h3>Adjust the map</h3><p>Set your own calorie range, weight unit, and color theme.</p><button class="button secondary" data-action="open-settings">Change settings</button>${!demoMode ? '<button class="danger-link" data-action="delete-all">Delete my log</button>' : ''}</div>
+        <div><h3>Adjust the map</h3><p>Set your own calorie range, weight unit, and color theme.</p><button class="button secondary" data-action="open-settings">Change settings</button>${demoMode ? '<button class="danger-link" data-action="clear-demo">Clear demo records</button>' : '<button class="danger-link" data-action="delete-all">Delete my log</button>'}</div>
       </div>
     </section>
   </main>${dialogs()}`, active);
@@ -341,6 +341,7 @@ async function handleAction(element: HTMLElement): Promise<void> {
   else if (action === 'print-week') window.print();
   else if (action === 'delete-entry') await deleteEntry();
   else if (action === 'delete-all') await deleteAll();
+  else if (action === 'clear-demo') await clearDemo();
   else if (action === 'reset-demo') await resetDemo();
 }
 
@@ -431,6 +432,12 @@ async function resetDemo(): Promise<void> {
   await store.clear(); records = sampleRecords(); settings = { ...DEFAULT_SETTINGS };
   await store.saveMany(records); await store.saveSettings(settings); weekStart = startOfWeek(new Date());
   await refreshReview('Reset the demo to its sample week.');
+}
+
+async function clearDemo(): Promise<void> {
+  if (!store || !window.confirm(`Clear all ${records.length} demo entries? Use Reset demo to restore them.`)) return;
+  await store.clear(); records = []; settings = { ...DEFAULT_SETTINGS }; applyTheme();
+  await refreshReview('Cleared all demo records.');
 }
 
 async function importCSV(event: Event): Promise<void> {
