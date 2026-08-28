@@ -1,0 +1,8 @@
+{
+  "slug": "calorie-week-view",
+  "title": "Calorie Week View",
+  "summary": "Review seven days of calories, macros, and weight without daily scores.",
+  "artifact_class": "pwa-offline",
+  "monetization": "free",
+  "smallest_useful_product": "Offline PWA accepting manual entries or CSV, showing seven-day calorie/macro bands, optional weight trend, missing-day annotation, and print/export."
+}
