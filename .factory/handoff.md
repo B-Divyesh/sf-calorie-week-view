@@ -19,7 +19,9 @@ are preserved.
   `demo:calorie-week-view` before opening the blank real log. Returning to
   `/demo` creates a fresh sample. `@regression:demo-exit-discard` verifies the
   edited range disappears, the demo database is absent after exit, and later
-  sample data uses default settings.
+  sample data uses default settings. The test keeps a verifier-style read
+  connection open and confirms the namespace is cleared before deletion can
+  finish, so a temporary reader cannot block exit.
 - **V4-03 — mobile targets:** the blank-week action, text-style import action,
   footer links, and privacy email now provide at least 44×44 CSS px targets.
   `@regression:mobile-target-size` measures every visible link, button, form
@@ -61,7 +63,7 @@ npm pack --dry-run
 - All 18 commands in `.factory/claims.json` were run separately in manifest
   order. Each selected exactly one browser test and passed.
 - `npm run build`: PASS — `dist/index.html` exists. Initial JavaScript is
-  36.47 kB raw / 12.40 kB gzip; CSS is 19.42 kB raw / 5.10 kB gzip; both are
+  36.41 kB raw / 12.37 kB gzip; CSS is 19.42 kB raw / 5.10 kB gzip; both are
   well below the static-product budgets.
 - `npm pack --dry-run`: PASS. Consumer installation does not apply to this
   private static PWA.

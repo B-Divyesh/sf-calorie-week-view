@@ -84,12 +84,15 @@ export class WeekStore {
   }
 
   async discard(): Promise<void> {
+    // Clear while this connection is still authoritative. A diagnostic tool or
+    // another tab may temporarily keep the now-empty database from being deleted.
+    await this.clear();
     this.close();
     await new Promise<void>((resolve, reject) => {
       const request = indexedDB.deleteDatabase(databaseName(this.demo));
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
-      request.onblocked = () => reject(new Error('Close other tabs using the demo, then choose Start for real again.'));
+      request.onblocked = () => resolve();
     });
   }
 }

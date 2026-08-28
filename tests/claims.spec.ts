@@ -384,11 +384,30 @@ test('Start for real discards the demo database and reseeds a later demo @regres
   await dialog.getByLabel('Maximum calories').fill('2345');
   await dialog.getByRole('button', { name: 'Save settings' }).click();
   await expect(page.getByText('range 1,234–2,345')).toBeVisible();
+  await page.evaluate(async () => new Promise<void>((resolve, reject) => {
+    const request = indexedDB.open('demo:calorie-week-view');
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      (window as Window & { demoObserver?: IDBDatabase }).demoObserver = request.result;
+      resolve();
+    };
+  }));
 
   await page.getByRole('button', { name: 'Start for real' }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(page.getByText('0 of 7 days logged')).toBeVisible();
-  expect(await page.evaluate(async () => (await indexedDB.databases()).map((database) => database.name))).not.toContain('demo:calorie-week-view');
+  expect(await page.evaluate(async () => new Promise<number>((resolve, reject) => {
+    const database = (window as Window & { demoObserver?: IDBDatabase }).demoObserver;
+    if (!database) return reject(new Error('The observer database was not retained.'));
+    const result = database.transaction('days', 'readonly').objectStore('days').count();
+    result.onsuccess = () => resolve(result.result);
+    result.onerror = () => reject(result.error);
+  }))).toBe(0);
+  await page.evaluate(() => {
+    (window as Window & { demoObserver?: IDBDatabase }).demoObserver?.close();
+    delete (window as Window & { demoObserver?: IDBDatabase }).demoObserver;
+  });
+  await expect.poll(() => page.evaluate(async () => (await indexedDB.databases()).map((database) => database.name))).not.toContain('demo:calorie-week-view');
 
   await page.goto('/demo');
   await expect(page.getByText('range 1,800–2,200')).toBeVisible();
