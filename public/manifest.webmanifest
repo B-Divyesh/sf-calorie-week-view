@@ -1,0 +1,15 @@
+{
+  "name": "Calorie Week View",
+  "short_name": "Week View",
+  "description": "Review seven days of calories, macros, and weight.",
+  "start_url": "/app?v=1.0.0",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f0e5",
+  "theme_color": "#173c35",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
