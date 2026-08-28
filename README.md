@@ -68,7 +68,7 @@ with `dist/index.html` at its root.
 
 ## Privacy and scope
 
-There is no account, analytics, ad script, food database, coaching, diagnosis,
+There is no account, analytics, ad script, food search, coaching, diagnosis,
 or automatic target. The app makes no health recommendation. Export a backup
 before clearing browser storage or moving devices.
 

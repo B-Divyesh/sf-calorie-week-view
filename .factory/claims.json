@@ -3,98 +3,126 @@
     "id": "offline-reload",
     "claim": "Works offline after the first visit",
     "where": "landing facts, README",
-    "test": "npm test -- --grep @claim:offline-reload",
+    "test": "npm test -- --grep '^.*@claim:offline-reload$'",
     "sandbox": "fresh browser context at /demo; load once, set the context offline, reload, and assert the sample week"
   },
   {
     "id": "csv-export",
     "claim": "Exports the log as CSV",
     "where": "review toolbar, README",
-    "test": "npm test -- --grep @claim:csv-export",
+    "test": "npm test -- --grep '^.*@claim:csv-export$'",
     "sandbox": "fresh browser context at /demo; assert the downloaded header and six sample rows"
   },
   {
     "id": "csv-import",
     "claim": "Imports daily totals from CSV",
     "where": "landing how-it-works, review tools, README",
-    "test": "npm test -- --grep @claim:csv-import",
+    "test": "npm test -- --grep '^.*@claim:csv-import$'",
     "sandbox": "fresh browser context at /demo; import a one-row CSV and assert its totals and note"
   },
   {
     "id": "json-export",
     "claim": "Exports entries and settings as a JSON backup",
     "where": "landing how-it-works, review tools, README",
-    "test": "npm test -- --grep @claim:json-export",
+    "test": "npm test -- --grep '^.*@claim:json-export$'",
     "sandbox": "fresh browser context at /demo; parse the download and assert the sample entries and range"
   },
   {
     "id": "print-week",
     "claim": "Opens a printable view of the selected week",
     "where": "landing how-it-works, review tools, README",
-    "test": "npm test -- --grep @claim:print-week",
+    "test": "npm test -- --grep '^.*@claim:print-week$'",
     "sandbox": "fresh browser context at /demo; replace the browser print function and assert the action calls it"
   },
   {
     "id": "local-private",
     "claim": "Your log stays in this browser and demo data is separate",
     "where": "landing facts, privacy page, README",
-    "test": "npm test -- --grep @claim:local-private",
+    "test": "npm test -- --grep '^.*@claim:local-private$'",
     "sandbox": "fresh browser context at /demo; save an entry, assert only same-origin requests and only the demo IndexedDB name"
   },
   {
     "id": "no-ads-tracking-third-party",
     "claim": "Has no ads, analytics, or third-party scripts",
     "where": "landing facts, privacy page, README",
-    "test": "npm test -- --grep @claim:no-ads-tracking-third-party",
+    "test": "npm test -- --grep '^.*@claim:no-ads-tracking-third-party$'",
     "sandbox": "fresh browser context at /demo; record all requests through a save flow and assert every script, frame, image, and request is same-origin"
   },
   {
     "id": "free-no-account",
     "claim": "Free, with no account or payment gate",
     "where": "landing facts, README",
-    "test": "npm test -- --grep @claim:free-no-account",
+    "test": "npm test -- --grep '^.*@claim:free-no-account$'",
     "sandbox": "fresh browser context at /demo; assert there is no password field, purchase link, subscription, or payment copy"
   },
   {
     "id": "manual-entry",
     "claim": "Adds daily calories and optional macros, weight, and notes",
     "where": "landing how-it-works, review editor, README",
-    "test": "npm test -- --grep @claim:manual-entry",
+    "test": "npm test -- --grep '^.*@claim:manual-entry$'",
     "sandbox": "fresh 390px browser context at /demo; use the keyboard to edit and save a daily entry"
   },
   {
     "id": "settings-choice",
     "claim": "Saves a user-chosen calorie range, weight unit, and color theme",
     "where": "review tools, README",
-    "test": "npm test -- --grep @claim:settings-choice",
+    "test": "npm test -- --grep '^.*@claim:settings-choice$'",
     "sandbox": "fresh browser context at /demo; save a new range, pounds, and dark theme, reload, then assert all three persist"
+  },
+  {
+    "id": "user-chosen-range",
+    "claim": "Uses the calorie range you choose and never suggests a target",
+    "where": "landing boundary, settings dialog, terms, README",
+    "test": "npm test -- --grep '^.*@claim:user-chosen-range$'",
+    "sandbox": "fresh browser context at /demo; set a non-default minimum and maximum, then assert the review uses that exact range and the settings dialog states that it does not suggest one"
+  },
+  {
+    "id": "no-daily-score",
+    "claim": "Does not show daily scores or judge a day",
+    "where": "landing lede, landing boundary, footer, README",
+    "test": "npm test -- --grep '^.*@claim:no-daily-score$'",
+    "sandbox": "fresh browser context at /demo; inspect every visible daily row and assert that no score, grade, or judgement control or value is shown"
+  },
+  {
+    "id": "no-food-search-or-coaching",
+    "claim": "Has no food search or coaching flow",
+    "where": "landing boundary, README",
+    "test": "npm test -- --grep '^.*@claim:no-food-search-or-coaching$'",
+    "sandbox": "fresh browser context across the public and review routes; assert that no search landmark or input, food-search control, or coaching control is exposed"
+  },
+  {
+    "id": "no-medical-advice",
+    "claim": "Does not provide medical advice or diagnoses",
+    "where": "terms page, README",
+    "test": "npm test -- --grep '^.*@claim:no-medical-advice$'",
+    "sandbox": "fresh browser context at /terms and /demo; assert the health boundary is shown and no advice, diagnosis, or recommendation control is exposed"
   },
   {
     "id": "json-import",
     "claim": "Imports entries and settings from a JSON backup",
     "where": "review tools, README",
-    "test": "npm test -- --grep @claim:json-import",
+    "test": "npm test -- --grep '^.*@claim:json-import$'",
     "sandbox": "fresh browser context at /demo; import a JSON backup with an entry and settings, then assert its total, range, unit, and theme"
   },
   {
     "id": "json-import-validation",
     "claim": "Rejects invalid JSON backups without changing your log",
     "where": "JSON backup import help",
-    "test": "npm test -- --grep @claim:json-import-validation",
+    "test": "npm test -- --grep '^.*@claim:json-import-validation$'",
     "sandbox": "fresh browser context at /demo; import impossible-date and invalid-settings backups, then assert a field-specific recovery error and unchanged sample log"
   },
   {
     "id": "delete-log",
     "claim": "Deletes the whole local log",
     "where": "landing privacy section, review tools, privacy page, README",
-    "test": "npm test -- --grep @claim:delete-log",
+    "test": "npm test -- --grep '^.*@claim:delete-log$'",
     "sandbox": "fresh browser context at /demo; clear the isolated demo database and assert zero logged days"
   },
   {
     "id": "logged-day-average",
     "claim": "Missing days stay blank and averages use only logged days",
     "where": "landing preview, weekly review, README",
-    "test": "npm test -- --grep @claim:logged-day-average",
+    "test": "npm test -- --grep '^.*@claim:logged-day-average$'",
     "sandbox": "fresh browser context at /demo; assert six logged days average to 2,062 and land inside the sample range"
   }
 ]

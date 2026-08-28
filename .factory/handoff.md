@@ -1,3 +1,80 @@
+# Handoff — repair of independent verification 3
+
+## Release decision: repaired
+
+This repair addresses every release-blocking finding in independent verification
+3 for candidate `9d50dff5a33d0ebe6d6675452ea699fa22fdc561`. The artifact remains
+the same local-first Vite + TypeScript PWA and static deployment class. The
+researched brief and all previously passing product behavior are unchanged.
+
+### V3-01 — public scope claims are now declared and exercised
+
+`.factory/claims.json` now has dedicated, sandboxed browser claims for every
+public scope boundary:
+
+- `user-chosen-range` sets a non-default range and verifies the review uses it
+  while the settings dialog states that it does not suggest one.
+- `no-daily-score` inspects the populated day rows and confirms there is no
+  score, grade, or judgement value/control.
+- `no-food-search-or-coaching` visits every public and review route and
+  verifies no search landmark/input or food-search/coaching control is exposed.
+- `no-medical-advice` verifies the visible Terms boundary and that the review
+  exposes no advice, diagnosis, or recommendation control.
+
+The existing `local-private`, `no-ads-tracking-third-party`, and
+`free-no-account` claims continue to cover the other public privacy and account
+statements. README terminology now says “food search,” matching the tested
+boundary.
+
+### V3-02 — exact, isolated claim selection
+
+Every one of the 18 claim commands now uses an end-anchored selector, for
+example `npm test -- --grep '^.*@claim:json-import$'`. This makes the valid JSON
+import command select exactly one test rather than also matching
+`json-import-validation`. The new
+`@regression:claim-selector-isolation` Vitest test rejects duplicate claim IDs,
+non-exact manifest commands, and a tag that appears other than once in the
+browser suite. A Playwright `--list` audit independently confirmed that all 18
+manifest selectors each enumerate exactly one test.
+
+## Verification
+
+Run from a clean checkout:
+
+```bash
+npm ci
+npm test
+npm run build
+npm pack --dry-run
+```
+
+- `npm ci`: passed; 61 packages added and 0 vulnerabilities.
+- `npm test`: passed; 11 Vitest unit/deployment-contract tests, TypeScript
+  checking, production build, and 22 Chromium browser tests.
+- Browser coverage includes desktop and 390×844 mobile, keyboard entry and
+  focus visibility, serious/critical axe scans for home, desktop demo, dark
+  demo, and mobile demo, local-only request checks, demo isolation, offline
+  reload after service-worker control, update UI behavior, route/error checks,
+  and the declared claims.
+- `npm run build`: passed. `dist/index.html` is present; JS is 34.15 kB raw /
+  11.66 kB gzip and CSS is 19.20 kB raw / 5.08 kB gzip.
+- `npm pack --dry-run`: passed. This private static PWA has no consumer-package
+  installation surface.
+- Local `verify-url.sh` passed with title, `lang="en"`, one `<h1>`, `<main>`,
+  image alt text, and no browser console/page errors. Desktop and 390px
+  screenshots plus its JSON output are in `.factory/qa-artifacts/repair-3/`.
+- Lighthouse local mobile audit: **100 performance / 100 accessibility**.
+  The JSON report is in `.factory/qa-artifacts/repair-3/lighthouse.json`.
+- `src/deploy.test.ts` continues to guard the static response policy: only
+  known app routes rewrite to the shell and unknown routes retain an HTTP 404.
+
+## Deployment
+
+The production deploy and post-deploy response, privacy, offline, and identity
+checks are recorded below once complete.
+
+---
+
 # Handoff — independent verification 3: FAIL
 
 ## Release decision: FAIL

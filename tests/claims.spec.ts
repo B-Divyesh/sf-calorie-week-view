@@ -143,6 +143,45 @@ test('saves a chosen range, weight unit, and dark theme @claim:settings-choice',
   await page.getByRole('button', { name: 'Close entry form' }).click();
 });
 
+test('uses the calorie range chosen by the person reviewing it @claim:user-chosen-range', async ({ page }) => {
+  await page.goto('/demo');
+  await page.getByRole('button', { name: 'Change settings' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Choose your range' });
+  await expect(dialog.getByText('Enter a range you already use. This tool does not suggest one.')).toBeVisible();
+  await dialog.getByLabel('Minimum calories').fill('1950');
+  await dialog.getByLabel('Maximum calories').fill('2350');
+  await dialog.getByRole('button', { name: 'Save settings' }).click();
+  await expect(page.getByText('range 1,950–2,350')).toBeVisible();
+  await expect(page.getByText('Inside your range')).toBeVisible();
+});
+
+test('shows daily totals without a score or judgement @claim:no-daily-score', async ({ page }) => {
+  await page.goto('/demo');
+  const rows = page.locator('.entry-row[role="row"]');
+  await expect(rows).toHaveCount(8);
+  for (const rowText of await rows.allTextContents()) expect(rowText).not.toMatch(/score|grade|judg(e|ment)/i);
+  await expect(page.getByRole('button', { name: /score|grade|judg(e|ment)/i })).toHaveCount(0);
+});
+
+test('exposes no food search or coaching flow @claim:no-food-search-or-coaching', async ({ page }) => {
+  for (const route of ['/', '/demo', '/app', '/privacy', '/terms']) {
+    await page.goto(route);
+    await expect(page.getByRole('search')).toHaveCount(0);
+    await expect(page.locator('input[type="search"], [role="searchbox"]')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /food search|search foods|coach|coaching/i })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /food search|search foods|coach|coaching/i })).toHaveCount(0);
+  }
+});
+
+test('shows a medical boundary without advice controls @claim:no-medical-advice', async ({ page }) => {
+  await page.goto('/terms');
+  await expect(page.getByRole('heading', { name: 'No medical advice' })).toBeVisible();
+  await expect(page.getByText('This tool does not provide medical advice, a diagnosis, or a calorie target.')).toBeVisible();
+  await page.goto('/demo');
+  await expect(page.getByRole('button', { name: /advice|diagnos|recommend/i })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /advice|diagnos|recommend/i })).toHaveCount(0);
+});
+
 test('imports entries and settings from a JSON backup @claim:json-import', async ({ page }) => {
   await page.goto('/demo');
   await page.locator('#json-input').setInputFiles({
