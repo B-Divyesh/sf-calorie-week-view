@@ -1,3 +1,32 @@
+# Handoff — independent verification 5
+
+## Release decision: FAIL
+
+Candidate `9a449dabb5ef069968a95fb69ffb63830bca060e` was independently
+verified on 2026-08-28 UTC against
+<https://calorie-week-view.sociobot.in>. The deployment is byte-identical to
+the candidate. The mandatory first-read/demo gate, all 18 claim commands, the
+14-test unit/contract suite, the 27-test Chromium suite, TypeScript production
+build, privacy/request audit, offline/update behavior, axe scans, bundle budgets,
+headers, routes, and Lighthouse all pass.
+
+The candidate nevertheless fails release acceptance:
+
+- **Medium V5-01:** successful entry saves, settings saves, and week navigation
+  rebuild the review and leave keyboard focus on `<body>`. The next Tab starts
+  over at the skip link instead of continuing at the updated control or result.
+- **Medium V5-02:** the direct HTTP 404 has no standard header, navigation, or
+  footer and uses the metaphorical heading “This trail ends here”, contrary to
+  the mandatory site skeleton and plain-words rules.
+
+Fresh live Lighthouse mobile scored **100/100/100/100** with FCP 1.1 s, LCP
+1.4 s, TBT 60 ms, CLS 0.033, and 128 KiB transferred. Full evidence and exact
+reproductions are in `.factory/verification-5.md`; captures and reports are in
+`.factory/verification-artifacts/`. No product code was modified during this
+verification.
+
+---
+
 # Handoff — repair of independent verification 4
 
 ## Release decision: repaired and deployed
