@@ -42,6 +42,13 @@
     "sandbox": "fresh browser context at /demo; save an entry, assert only same-origin requests and only the demo IndexedDB name"
   },
   {
+    "id": "no-ads-tracking-third-party",
+    "claim": "Has no ads, analytics, or third-party scripts",
+    "where": "landing facts, privacy page, README",
+    "test": "npm test -- --grep @claim:no-ads-tracking-third-party",
+    "sandbox": "fresh browser context at /demo; record all requests through a save flow and assert every script, frame, image, and request is same-origin"
+  },
+  {
     "id": "free-no-account",
     "claim": "Free, with no account or payment gate",
     "where": "landing facts, README",
@@ -60,7 +67,14 @@
     "claim": "Saves a user-chosen calorie range, weight unit, and color theme",
     "where": "review tools, README",
     "test": "npm test -- --grep @claim:settings-choice",
-    "sandbox": "fresh browser context at /demo; save a new range and dark theme, then assert both appear"
+    "sandbox": "fresh browser context at /demo; save a new range, pounds, and dark theme, reload, then assert all three persist"
+  },
+  {
+    "id": "json-import",
+    "claim": "Imports entries and settings from a JSON backup",
+    "where": "review tools, README",
+    "test": "npm test -- --grep @claim:json-import",
+    "sandbox": "fresh browser context at /demo; import a JSON backup with an entry and settings, then assert its total, range, unit, and theme"
   },
   {
     "id": "delete-log",

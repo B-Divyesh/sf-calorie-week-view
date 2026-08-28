@@ -107,7 +107,7 @@ a:hover { color: var(--ochre); }
   display: flex; align-items: center; justify-content: space-between; gap: 24px;
   border-bottom: 1px solid var(--line);
 }
-.wordmark { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; line-height: 1.05; text-decoration: none; letter-spacing: .02em; }
+.wordmark { min-height: 44px; display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; line-height: 1.05; text-decoration: none; letter-spacing: .02em; }
 .wordmark svg { width: 42px; height: 42px; fill: none; stroke: var(--ochre); stroke-width: 1.5; }
 .site-header nav { display: flex; gap: 28px; align-items: center; }
 .site-header nav a { min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; text-decoration: none; border-bottom: 2px solid transparent; }
@@ -199,6 +199,7 @@ h3 { font-size: 21px; line-height: 1.2; margin-bottom: 8px; }
 .site-footer { max-width: 1192px; margin: 32px auto 0; padding: 32px 24px 48px; border-top: 2px solid var(--ink); display: grid; grid-template-columns: 1fr auto; gap: 16px 40px; font-size: 15px; }
 .site-footer p { margin: 0; }
 .site-footer nav { display: flex; flex-wrap: wrap; gap: 24px; }
+.site-footer nav a { min-height: 44px; display: inline-flex; align-items: center; }
 .build-id { grid-column: 1 / -1; color: var(--muted); }
 
 .prose-page, .not-found { max-width: 900px; min-height: 70vh; margin: 0 auto; padding: 88px 24px; }
@@ -235,7 +236,8 @@ h3 { font-size: 21px; line-height: 1.2; margin-bottom: 8px; }
 .chart-heading h2 { font-size: 30px; }
 .legend { font-size: 14px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
 .range-key { width: 28px; height: 14px; display: inline-block; background: repeating-linear-gradient(135deg, var(--hatch) 0 4px, transparent 4px 8px); border: 1px solid var(--moss); }
-.chart-scroll { overflow-x: auto; padding-bottom: 4px; }
+.chart-scroll { overflow-x: auto; padding-bottom: 4px; scroll-padding-inline: 4px; }
+.chart-scroll:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
 .calorie-chart, .weight-chart { width: 100%; min-width: 620px; display: block; overflow: visible; font-family: inherit; }
 .grid-lines { fill: none; stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 5; }
 .target-band { fill: var(--hatch); stroke: var(--moss); stroke-width: 1; stroke-dasharray: 5 4; }
@@ -268,6 +270,8 @@ h3 { font-size: 21px; line-height: 1.2; margin-bottom: 8px; }
 .tool-groups .button, .tool-groups .text-button, .tool-groups .text-link, .tool-groups .danger-link { margin: 0 8px 8px 0; }
 .file-button { position: relative; cursor: pointer; }
 .file-button input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+.file-button:focus-within { outline: 3px solid var(--focus); outline-offset: 3px; }
+.file-button input:focus-visible { outline: 0; }
 
 dialog { width: min(680px, calc(100% - 32px)); max-height: calc(100vh - 32px); padding: 0; border: 2px solid var(--ink); border-radius: 14px; background: var(--surface); color: var(--ink); box-shadow: 12px 12px 0 var(--ochre); overflow-y: auto; }
 dialog::backdrop { background: rgba(15, 26, 22, .72); backdrop-filter: blur(2px); }

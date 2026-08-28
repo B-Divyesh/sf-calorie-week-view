@@ -1,116 +1,84 @@
-# Handoff — independent verification of Calorie Week View v1
+# Handoff — repair of independent QA findings
 
-## Verification verdict: FAIL
+## Result
 
-Independent QA on 2026-08-28 tested commit
-`c76fbd3f1d12dfe99f8beb46e2b99cf672c22f01` and
-<https://calorie-week-view.sociobot.in>. The live build matches the candidate by
-SHA-256 for the HTML, built JS/CSS, service worker, manifest, font, and hero.
+This repair addresses every release-blocking finding in the independent report
+for candidate `c76fbd3f1d12dfe99f8beb46e2b99cf672c22f01` (report commit
+`f5f48831bfb66cf71ca08678966ea9bd15d55573`). The artifact remains a local-first
+Vite + TypeScript PWA with static deployment output in `dist/`.
 
-Release blockers:
+## Repairs
 
-- The mandatory `offline-reload` claim test failed on its first exact run. A
-  clean-clone repeat produced 3 passes and 7 failures; failed offline reloads
-  were blank and did not run the cached app.
-- Axe at 390 px reports serious `scrollable-region-focusable` violations for
-  the calorie and weight chart scrollers.
-- Keyboard focus on the transparent CSV/JSON file inputs has no visible focus
-  treatment.
-- Public capabilities are not fully represented/proved in `claims.json`:
-  manual-entry and settings tests omit fields named by their claims, and JSON
-  import has no claim test.
+- **V-01 offline reliability:** the service worker now uses a versioned
+  cache-first shell lookup with stable path matching (`ignoreVary` and
+  `ignoreSearch`). A controlled offline reload no longer depends on a failed
+  network-first request or browser conditional request matching. The exact
+  claim passed 10/10 repeated fresh-context runs.
+- **V-02 mobile chart access:** overflowing chart regions are keyboard
+  focusable regions with clear labels and a visible ochre focus ring. The axe
+  regression test now scans populated `/demo` at 390×844 as well as desktop
+  and dark mode.
+- **V-03 file input focus:** transparent CSV and JSON file inputs now expose
+  focus on their visible label through `:focus-within`.
+- **V-04 claims:** expanded the manifest and browser coverage to include JSON
+  backup import and the public no-ads/no-analytics/no-third-party-scripts
+  promise. Manual entry now verifies macros, weight, and notes; settings now
+  verifies range, pounds, theme, and IndexedDB persistence.
+- **V-05 CSV integrity:** invalid non-empty optional numeric CSV cells now
+  reject their row with its row number and column, instead of silently becoming
+  null. Unit and browser regressions cover this path.
+- **V-06 touch targets:** footer links and the wordmark have 44 px minimum
+  heights at 390 px. A mobile browser regression measures them.
+- **V-07 real 404:** static deployment routes now rewrite only the known SPA
+  paths. Removing the broad navigation fallback lets an unknown path produce a
+  real 404 response, which the existing response override renders with
+  `404.html`. A deployment-config regression guards this contract.
 
-Other defects:
+An adjacent JSON-import defect was also corrected: after importing a backup,
+the review switches to the imported entry's week so the restored total is
+immediately visible.
 
-- Invalid optional CSV values are silently discarded while the app reports a
-  successful import.
-- Several mobile footer targets are only 22.5 px tall, below the 44 px contract.
-- Unknown live URLs render the designed not-found screen but return HTTP 200.
+## Verification
 
-The cold first-read and one-click demo gates pass. Core local storage, normal
-entry/edit/settings/delete flows, required-field recovery, exports, JSON restore,
-privacy boundaries, update notification, security headers, bundle budgets, and
-deployment identity also pass. Lighthouse mobile scored 96 performance, 100
-accessibility on the landing page, 100 best practices, and 100 SEO; the app-route
-mobile axe failures remain authoritative.
+Run from a clean checkout:
 
-Full commands, claim-by-claim results, evidence, and required fixes are in
-`.factory/verification.md`. Product code was not modified by the verifier.
+```bash
+npm ci
+npm test
+npm pack --dry-run
+```
 
-## What shipped
+Evidence from this repair:
 
-- A Vite + TypeScript offline PWA at `/`, with the real local log at `/app` and
-  the isolated one-click sample at `/demo`.
-- Manual daily entries for calories, optional protein/carbs/fat, optional
-  weight, and notes. Entries use IndexedDB and survive reloads.
-- A Monday-to-Sunday review with a logged-day average, user-chosen range,
-  missing-day labels, macro averages, calorie chart text alternatives, and an
-  optional weight trend. Mobile chart-scroll accessibility remains defective.
-- CSV import with clear required-field errors, CSV export, JSON backup
-  import/export, selected-week printing, settings, individual deletion, and
-  full-log deletion. Invalid optional CSV cells are currently discarded.
-- Separate `demo:calorie-week-view` and `calorie-week-view` databases. Demo
-  reset/clear actions never read or write the real database.
-- A hand-written service worker, versioned app-shell cache, runtime cache,
-  offline fallback, update notice, install manifest, maskable icons, and
-  standalone app colors.
-- `/privacy`, `/terms`, and styled 404/offline pages; canonical/Open Graph/
-  Twitter metadata; sitemap, robots, CSP, security headers, and cache headers.
-- A product-specific topographic cartography system with light/dark treatments,
-  reduced-motion behavior, original generated hero art, and self-hosted
-  Atkinson Hyperlegible fonts.
+- `npm ci`: passed; 61 packages installed, 62 audited, zero vulnerabilities.
+- `npm test`: passed; 8 Vitest unit/deployment tests and 17 Playwright browser
+  tests. Type checking runs in `npm run build` via `tsc --noEmit`.
+- All 13 exact commands listed in `.factory/claims.json` passed independently.
+- `npx playwright test --grep '@claim:offline-reload' --repeat-each=10`:
+  10/10 passed.
+- The Playwright axe integration found no serious or critical issues on home,
+  desktop demo, dark demo, or populated 390×844 demo. The browser suite also
+  covers keyboard entry, chart focus, file-input focus, local-only requests,
+  responsive behavior, route metadata, and console errors.
+- Production build: JS 32.03 KB raw / 10.96 KB gzip; CSS 19.20 KB raw /
+  5.08 KB gzip. `dist/index.html` is present. `npm pack --dry-run` passed;
+  this private PWA has no published consumer package.
+- The static response policy is covered by `src/deploy.test.ts`: known SPA
+  routes rewrite to the app shell, no broad navigation fallback exists, and a
+  404 response rewrites to the designed `404.html` page. CSP and other static
+  security headers remain in `public/staticwebapp.config.json`.
 
 ## Run and deploy
 
-```bash
-npm install
-npm test
-npm run build
-```
+`npm run build` writes the static deployment artifact to `dist/`. Push `main`
+to trigger the factory static deployment configured for
+`https://calorie-week-view.sociobot.in`. The demo remains `/demo` (or
+`?demo=1`), with its isolated `demo:calorie-week-view` IndexedDB namespace.
 
-The required build command is exactly `npm run build`. It writes `dist/` and
-places `index.html` at `dist/index.html`.
+## Known scope
 
-Demo URL: `/demo` or `?demo=1`. See `.factory/demo.md` for sample and storage
-details. Public claims and exact isolated test commands are in
-`.factory/claims.json`.
-
-## Original builder self-report (superseded by independent QA above)
-
-The builder recorded the following before independent verification. Its claim
-result is not the acceptance result because the verifier reproduced failures.
-
-- `npm test`: 6 unit tests and 13 Chromium tests passed.
-- Every `@claim:*` test passed from a fresh `/demo` context.
-- Offline test passed three consecutive runs with two parallel workers after
-  the service worker cache was made resistant to conditional 304 responses.
-- Playwright axe scan: no serious or critical findings on home, demo, or dark
-  mode.
-- 390×844 keyboard path: add/edit dialog, save action, and no page overflow.
-- Factory `verify-url.sh`: HTTP 200; title, `lang`, one `h1`, `main`, image alt,
-  and button labels present; zero console errors; measured load 575 ms locally.
-- Lighthouse 12.8.2, mobile defaults, production preview:
-  - Performance 100
-  - Accessibility 100
-  - Best practices 100
-  - SEO 100
-  - LCP 1.8 s, FCP 1.1 s, CLS 0, TBT 0 ms
-- Production bundle: 10.84 KB gzip JS and 5.04 KB gzip CSS. Fonts total 47 KB.
-  Hero WebP is 42 KB. These are below the 200/50/120/300 KB budgets.
-- `npm audit`: zero vulnerabilities.
-- Generated art reviewed at desktop and 390 px. Source, prompt, factory model,
-  date, and review notes are in `assets/src/` and `.factory/design.md`.
-- Landing copy read aloud and audited in `.factory/copy-audit.md`; no sentence
-  exceeds 22 words and no banned word remains.
-
-## Known gaps and next steps
-
-- Data is intentionally device-local. There is no account or cross-device sync.
-- CSV dates must use `YYYY-MM-DD`; calories are required. The importer supports
-  common macro headings but does not map every vendor-specific export format.
-- Weight units are labels, not automatic converters. Changing the unit does not
-  alter saved numeric values.
-- Browser storage can be removed by browser settings. Users should export JSON
-  before clearing site data or changing devices.
-- The deployed host applies the security/cache headers, but its navigation
-  fallback returns HTTP 200 for unknown paths instead of the intended 404.
+- Data intentionally stays in the current browser. There is no account or
+  cross-device sync.
+- CSV dates must use `YYYY-MM-DD`; calories are required; any supplied macro
+  or weight value must be a non-negative number.
+- Weight-unit changes relabel stored values rather than converting them.

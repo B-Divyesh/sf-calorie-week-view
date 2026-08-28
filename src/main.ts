@@ -253,7 +253,7 @@ function calorieChart(slots: ReturnType<typeof slotsForWeek>): string {
     return `<g class="day-mark"><rect x="${x}" y="${barY}" width="38" height="${chartBottom - barY}" rx="4"/><text x="${x + 19}" y="${Math.max(13, barY - 6)}" text-anchor="middle">${slot.record.calories}</text><text x="${x + 19}" y="201" text-anchor="middle">${day.weekday}</text><text x="${x + 19}" y="216" text-anchor="middle">${day.date.replace(' ', ' ')}</text></g>`;
   }).join('');
   const summary = slots.map((slot) => `${formatDay(slot.date).weekday}: ${slot.record ? `${slot.record.calories} calories` : 'missing'}`).join('; ');
-  return `<div class="chart-scroll"><svg class="calorie-chart trace-in" viewBox="0 0 560 230" role="img" aria-labelledby="calorie-svg-title calorie-svg-desc"><title id="calorie-svg-title">Daily calorie bars</title><desc id="calorie-svg-desc">${escapeHTML(summary)}. Chosen range is ${settings.calorieMin} to ${settings.calorieMax} calories.</desc><g class="grid-lines"><path d="M34 18v160h515"/><path d="M34 98h515"/><path d="M34 58h515"/><path d="M34 138h515"/></g><rect class="target-band" x="34" y="${bandY}" width="515" height="${bandHeight}"/><g class="bars">${bars}</g></svg></div>`;
+  return `<div class="chart-scroll" tabindex="0" role="region" aria-label="Scrollable calorie chart. Use arrow keys to scroll when needed."><svg class="calorie-chart trace-in" viewBox="0 0 560 230" role="img" aria-labelledby="calorie-svg-title calorie-svg-desc"><title id="calorie-svg-title">Daily calorie bars</title><desc id="calorie-svg-desc">${escapeHTML(summary)}. Chosen range is ${settings.calorieMin} to ${settings.calorieMax} calories.</desc><g class="grid-lines"><path d="M34 18v160h515"/><path d="M34 98h515"/><path d="M34 58h515"/><path d="M34 138h515"/></g><rect class="target-band" x="34" y="${bandY}" width="515" height="${bandHeight}"/><g class="bars">${bars}</g></svg></div>`;
 }
 
 function weightChart(slots: ReturnType<typeof slotsForWeek>): string {
@@ -265,7 +265,7 @@ function weightChart(slots: ReturnType<typeof slotsForWeek>): string {
   const plotted = points.map((point) => ({ ...point, x: 48 + point.index * 74, y: 104 - ((point.value - low) / (high - low || 1)) * 72 }));
   const path = plotted.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ');
   const summary = plotted.map((point) => `${formatDay(point.date).weekday}: ${point.value} ${settings.weightUnit}`).join('; ');
-  return `<div class="chart-scroll"><svg class="weight-chart trace-in" viewBox="0 0 560 145" role="img" aria-labelledby="weight-svg-title weight-svg-desc"><title id="weight-svg-title">Weight trend</title><desc id="weight-svg-desc">${escapeHTML(summary)}</desc><path class="weight-line" d="${path}"/>${plotted.map((point) => `<g><circle cx="${point.x}" cy="${point.y}" r="6"/><text x="${point.x}" y="${point.y - 12}" text-anchor="middle">${point.value}</text><text x="${point.x}" y="132" text-anchor="middle">${formatDay(point.date).weekday}</text></g>`).join('')}</svg></div>`;
+  return `<div class="chart-scroll" tabindex="0" role="region" aria-label="Scrollable weight chart. Use arrow keys to scroll when needed."><svg class="weight-chart trace-in" viewBox="0 0 560 145" role="img" aria-labelledby="weight-svg-title weight-svg-desc"><title id="weight-svg-title">Weight trend</title><desc id="weight-svg-desc">${escapeHTML(summary)}</desc><path class="weight-line" d="${path}"/>${plotted.map((point) => `<g><circle cx="${point.x}" cy="${point.y}" r="6"/><text x="${point.x}" y="${point.y - 12}" text-anchor="middle">${point.value}</text><text x="${point.x}" y="132" text-anchor="middle">${formatDay(point.date).weekday}</text></g>`).join('')}</svg></div>`;
 }
 
 function entriesTable(slots: ReturnType<typeof slotsForWeek>): string {
@@ -464,8 +464,10 @@ async function importJSON(event: Event): Promise<void> {
     if (!Array.isArray(backup.records) || !backup.records.every((record) => /^\d{4}-\d{2}-\d{2}$/.test(record.date) && Number.isFinite(record.calories))) throw new Error('This is not a Calorie Week View backup.');
     await store.saveMany(backup.records);
     if (backup.settings) { settings = { ...DEFAULT_SETTINGS, ...backup.settings }; await store.saveSettings(settings); }
-    records = await store.records(); applyTheme();
-    await refreshReview(`Imported ${backup.records.length} entries from the backup.`);
+    records = await store.records();
+    if (backup.records.length) weekStart = startOfWeek(parseLocalDate(backup.records[0].date));
+    applyTheme();
+    await refreshReview(`Imported ${backup.records.length} ${backup.records.length === 1 ? 'entry' : 'entries'} from the backup.`);
   } catch (error) {
     showToast(error instanceof Error ? `${error.message} Choose a JSON backup exported by this app.` : 'The backup could not be read. Choose a JSON backup exported by this app.', true);
   }

@@ -33,6 +33,13 @@ describe('CSV', () => {
     expect(() => parseCSV('day,protein\n2026-08-24,120')).toThrow('date and calories');
   });
 
+  it('rejects invalid optional numeric values instead of silently dropping them', () => {
+    expect(() => parseCSV('date,calories,protein,weight\n2026-08-24,2050,-5,not-a-number'))
+      .toThrow('Row 2 has an invalid protein value');
+    expect(() => parseCSV('date,calories,protein,weight\n2026-08-24,2050,120,not-a-number'))
+      .toThrow('Row 2 has an invalid weight value');
+  });
+
   it('round trips records through export', () => {
     const records = parseCSV('date,calories,note\n2026-08-24,2050,"Dinner, out"');
     expect(parseCSV(recordsToCSV(records))[0]).toMatchObject({ date: '2026-08-24', calories: 2050, note: 'Dinner, out' });

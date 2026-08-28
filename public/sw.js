@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calorie-week-view-v1.0.1';
+const CACHE_NAME = 'calorie-week-view-v1.0.2';
 const SHELL = [
   '/', '/app', '/demo', '/privacy', '/terms', '/offline.html', '/static.css',
   '/manifest.webmanifest', '/icons/favicon.svg', '/icons/icon-192.png',
@@ -33,21 +33,21 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
-  if (event.request.mode === 'navigate') {
-    event.respondWith(fetch(event.request).then(async (response) => {
-      const copy = response.clone();
-      const cache = await caches.open(CACHE_NAME);
-      await cache.put(event.request, copy);
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    // The cache key is the stable path, not the browser's conditional request.
+    // That makes a controlled reload deterministic when the browser is offline.
+    const cached = await cache.match(event.request, { ignoreSearch: true, ignoreVary: true });
+    if (cached) return cached;
+    try {
+      const response = await fetch(event.request);
+      if (response.ok) await cache.put(event.request, response.clone());
       return response;
-    }).catch(async () => (await caches.match(event.request)) || (await caches.match('/')) || caches.match('/offline.html')));
-    return;
-  }
-  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then(async (response) => {
-    if (response.ok) {
-      const copy = response.clone();
-      const cache = await caches.open(CACHE_NAME);
-      await cache.put(event.request, copy);
+    } catch (error) {
+      if (event.request.mode === 'navigate') {
+        return (await cache.match('/', { ignoreVary: true })) || (await cache.match('/offline.html', { ignoreVary: true }));
+      }
+      throw error;
     }
-    return response;
-  })));
+  })());
 });

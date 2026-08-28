@@ -101,10 +101,13 @@ export function parseCSV(source: string): DayRecord[] {
     throw new Error('The CSV needs date and calories columns.');
   }
 
-  const optionalNumber = (value: string | undefined): number | null => {
+  const optionalNumber = (value: string | undefined, rowNumber: number, column: string): number | null => {
     if (!value) return null;
     const parsed = Number(value);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      throw new Error(`Row ${rowNumber} has an invalid ${column} value. Leave it blank or use a non-negative number.`);
+    }
+    return parsed;
   };
 
   return rows.slice(1).map((cells, rowIndex) => {
@@ -119,10 +122,10 @@ export function parseCSV(source: string): DayRecord[] {
     return {
       date,
       calories: Math.round(calories),
-      protein: columns.protein >= 0 ? optionalNumber(cells[columns.protein]) : null,
-      carbs: columns.carbs >= 0 ? optionalNumber(cells[columns.carbs]) : null,
-      fat: columns.fat >= 0 ? optionalNumber(cells[columns.fat]) : null,
-      weight: columns.weight >= 0 ? optionalNumber(cells[columns.weight]) : null,
+      protein: columns.protein >= 0 ? optionalNumber(cells[columns.protein], rowIndex + 2, 'protein') : null,
+      carbs: columns.carbs >= 0 ? optionalNumber(cells[columns.carbs], rowIndex + 2, 'carbs') : null,
+      fat: columns.fat >= 0 ? optionalNumber(cells[columns.fat], rowIndex + 2, 'fat') : null,
+      weight: columns.weight >= 0 ? optionalNumber(cells[columns.weight], rowIndex + 2, 'weight') : null,
       note: columns.note >= 0 ? (cells[columns.note] ?? '').slice(0, 200) : '',
       updatedAt: Date.now(),
     } satisfies DayRecord;

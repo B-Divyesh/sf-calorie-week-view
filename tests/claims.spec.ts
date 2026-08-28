@@ -11,10 +11,11 @@ test('works offline after the first visit @claim:offline-reload', async ({ page,
   await page.waitForFunction(async () => {
     const script = document.querySelector<HTMLScriptElement>('script[type="module"]')?.src;
     const stylesheet = document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]')?.href;
-    return Boolean(script && stylesheet && await caches.match(script) && await caches.match(stylesheet));
+    const cache = await caches.open('calorie-week-view-v1.0.2');
+    return Boolean(script && stylesheet && await cache.match(script, { ignoreVary: true }) && await cache.match(stylesheet, { ignoreVary: true }) && await cache.match('/demo', { ignoreVary: true }));
   });
   await context.setOffline(true);
-  await page.goto(page.url());
+  await page.reload();
   await expect(page.getByRole('heading', { name: 'Review your calorie week' })).toBeVisible();
   await expect(page.getByText('2,062 kcal')).toBeVisible();
 });
@@ -84,6 +85,22 @@ test('keeps demo traffic and storage local @claim:local-private', async ({ page 
   expect(externalRequests).toEqual([]);
 });
 
+test('loads no ads, analytics, or third-party scripts @claim:no-ads-tracking-third-party', async ({ page }) => {
+  const externalRequests: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).origin !== 'http://127.0.0.1:4173') externalRequests.push(request.url());
+  });
+  await page.goto('/demo');
+  await page.getByRole('button', { name: 'Add daily totals' }).first().click();
+  await page.getByRole('spinbutton', { name: 'Calories Required' }).fill('2010');
+  await page.getByRole('button', { name: 'Save daily totals' }).click();
+  const externalResources = await page.evaluate(() => [...document.querySelectorAll('script[src], img[src], iframe[src], link[rel="stylesheet"][href], link[rel="preload"][href], link[rel="manifest"][href]')]
+    .map((node) => (node as HTMLScriptElement | HTMLImageElement | HTMLIFrameElement | HTMLLinkElement).src || (node as HTMLLinkElement).href)
+    .filter((url) => url && new URL(url).origin !== location.origin));
+  expect(externalRequests).toEqual([]);
+  expect(externalResources).toEqual([]);
+});
+
 test('uses logged days only for the weekly average @claim:logged-day-average', async ({ page }) => {
   await page.goto('/demo');
   await expect(page.getByText('2,062 kcal')).toBeVisible();
@@ -100,16 +117,47 @@ test('is free and has no account gate @claim:free-no-account', async ({ page }) 
   await expect(page.getByText(/buy|subscribe|payment/i)).toHaveCount(0);
 });
 
-test('saves a chosen range and dark theme @claim:settings-choice', async ({ page }) => {
+test('saves a chosen range, weight unit, and dark theme @claim:settings-choice', async ({ page }) => {
   await page.goto('/demo');
   await page.getByRole('button', { name: 'Change settings' }).click();
   const dialog = page.getByRole('dialog', { name: 'Choose your range' });
   await dialog.getByLabel('Minimum calories').fill('1900');
   await dialog.getByLabel('Maximum calories').fill('2300');
+  await dialog.getByLabel('Weight unit').selectOption('lb');
   await dialog.getByLabel('Color theme').selectOption('dark');
   await dialog.getByRole('button', { name: 'Save settings' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.getByText('range 1,900–2,300')).toBeVisible();
+  await expect.poll(() => page.evaluate(async () => new Promise<Record<string, unknown>>((resolve, reject) => {
+    const request = indexedDB.open('demo:calorie-week-view');
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const transaction = request.result.transaction('settings', 'readonly');
+      const value = transaction.objectStore('settings').get('main');
+      value.onsuccess = () => resolve(value.result);
+      value.onerror = () => reject(value.error);
+    };
+  }))).toMatchObject({ calorieMin: 1900, calorieMax: 2300, weightUnit: 'lb', theme: 'dark' });
+  await page.getByRole('button', { name: 'Add daily totals' }).first().click();
+  await expect(page.getByLabel('Weight (lb)')).toBeVisible();
+  await page.getByRole('button', { name: 'Close entry form' }).click();
+});
+
+test('imports entries and settings from a JSON backup @claim:json-import', async ({ page }) => {
+  await page.goto('/demo');
+  await page.locator('#json-input').setInputFiles({
+    name: 'backup.json', mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({
+      settings: { calorieMin: 1900, calorieMax: 2300, weightUnit: 'lb', theme: 'dark' },
+      records: [{ date: '2026-08-17', calories: 2300, protein: 125, carbs: 250, fat: 78, weight: 160, note: 'Restored day', updatedAt: 1 }],
+    })),
+  });
+  await expect(page.getByText('Imported 1 entry from the backup.')).toBeVisible();
+  await expect(page.getByRole('cell', { name: '2,300' })).toBeVisible();
+  await expect(page.getByText('range 1,900–2,300')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.getByRole('button', { name: 'Add daily totals' }).first().click();
+  await expect(page.getByLabel('Weight (lb)')).toBeVisible();
 });
 
 test('clears every local record @claim:delete-log', async ({ page }) => {
@@ -120,7 +168,7 @@ test('clears every local record @claim:delete-log', async ({ page }) => {
   await expect(page.getByText('0 of 7 days logged')).toBeVisible();
 });
 
-test('has no serious accessibility violations', async ({ page }) => {
+test('has no serious accessibility violations at desktop and 390px mobile', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('h1')).toHaveCount(1);
   const homeResults = await new AxeBuilder({ page }).analyze();
@@ -131,6 +179,10 @@ test('has no serious accessibility violations', async ({ page }) => {
   await page.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
   const darkResults = await new AxeBuilder({ page }).analyze();
   expect(darkResults.violations.filter((item) => ['serious', 'critical'].includes(item.impact ?? ''))).toEqual([]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/demo');
+  const mobileResults = await new AxeBuilder({ page }).analyze();
+  expect(mobileResults.violations.filter((item) => ['serious', 'critical'].includes(item.impact ?? ''))).toEqual([]);
 });
 
 test('keeps route titles, landmarks, links, and console clean', async ({ page }) => {
@@ -160,15 +212,50 @@ test('keeps route titles, landmarks, links, and console clean', async ({ page })
   expect(errors).toEqual([]);
 });
 
-test('supports a 390px keyboard entry path @claim:manual-entry', async ({ page }) => {
+test('supports a 390px keyboard entry path with optional fields @claim:manual-entry', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/demo');
   await page.getByRole('button', { name: 'Add daily totals' }).first().focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.getByRole('spinbutton', { name: 'Calories Required' }).fill('1995');
+  await page.getByLabel('Protein (g)').fill('110');
+  await page.getByLabel('Carbs (g)').fill('220');
+  await page.getByLabel('Fat (g)').fill('65');
+  await page.getByLabel('Weight (kg)').fill('72.4');
+  await page.getByLabel(/Note/).fill('Keyboard note');
   await page.getByRole('button', { name: 'Save daily totals' }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByText(/Saved totals for/)).toBeVisible();
+  await expect(page.getByText('P 110g · C 220g · F 65g')).toBeVisible();
+  await expect(page.getByRole('cell', { name: '72.4 kg' })).toBeVisible();
+  await expect(page.getByText('Note: Keyboard note')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('makes mobile chart scrollers, import controls, and footer links visibly keyboard reachable', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/demo');
+  const chart = page.locator('.chart-scroll').first();
+  await chart.focus();
+  await expect(chart).toBeFocused();
+  await expect(chart).toHaveCSS('outline-style', 'solid');
+  const csvInput = page.locator('#csv-input');
+  await csvInput.focus();
+  await expect(page.locator('label.file-button').first()).toHaveCSS('outline-style', 'solid');
+  for (const link of await page.locator('.site-footer nav a').all()) {
+    const box = await link.boundingBox();
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+  }
+  expect((await page.locator('.wordmark').boundingBox())?.height).toBeGreaterThanOrEqual(44);
+});
+
+test('reports invalid optional CSV cells and leaves the log unchanged', async ({ page }) => {
+  await page.goto('/demo');
+  await page.locator('#csv-input').setInputFiles({
+    name: 'bad-optional.csv', mimeType: 'text/csv',
+    buffer: Buffer.from('date,calories,protein,weight\n2026-08-17,2300,-5,not-a-number'),
+  });
+  await expect(page.getByText(/Row 2 has an invalid protein value/)).toBeVisible();
+  await expect(page.getByText('6 of 7 days logged')).toBeVisible();
 });
