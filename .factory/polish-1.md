@@ -44,4 +44,9 @@ in `.factory/handoff.md`.
 | F-1-19 | README leads with the offline result, not service-worker jargon. | README copy audit; `@claim:offline-reload`. |
 | F-1-20 | README moves the demo database namespace to the developer test section. | README copy audit; `.factory/demo.md`. |
 
-All screenshots and live results are added to the final handoff after deployment.
+Live verification passed after deployment `6fd24fe5-5368-4984-80ff-3cb4cf5ed86a`:
+`verify-url.sh` reported no console/page errors; a fresh 390 px browser sweep
+passed the one-click demo, reset, real/demo isolation, metadata, mobile axe,
+offline reload, direct `?demo=1`, and HTTP 404 checks. Live evidence is in
+`qa-artifacts/polish-1/live-verify/`, `qa-artifacts/polish-1/live-demo.png`,
+and `qa-artifacts/polish-1/live-home-mobile.png`.

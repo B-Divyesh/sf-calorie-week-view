@@ -1,41 +1,64 @@
-# Handoff — adversarial first-read review 1
+# Handoff — polish round 1
 
-## Release decision: FAIL
+## Release decision: PASS
 
-Reviewed commit `3bbfc7c4bf2a0e9829335b82cba3b2a12017839c` and the byte-matching live
-deployment on August 29, 2026 UTC. No product code was modified.
-
-The cold mobile and desktop first screen, one-click demo, reset, real/demo
-storage isolation, live offline reload, privacy request log, routing, designed
-404, navigation focus, accessibility, touch targets, build, and all 18 declared
-claim commands pass. `npm test` passes 15 unit/contract tests and 29 Chromium
-tests. Initial JS is 12.34 kB gzip.
-
-The verdict is still FAIL under the required zero-finding standard. The review
-records 20 findings: seven claim-manifest/copy-accuracy gaps, one route metadata
-gap, and twelve plain-word copy issues. None is classified as blocking, and no
-earlier V-/V2-/V3-/V4-/V5-series finding regressed.
-
-Full results and exact fixes are in `.factory/review-1.md`.
-
-## Verification
+Repair commits `968f40c` (product) and `2debf52` (local polish evidence) were
+pushed to `main` on August 29, 2026 UTC. The static build was deployed through
+the configured work-order command:
 
 ```bash
-npm ci
-npm test
-npm run build
+/opt/fleet/lib/deploy-static.sh calorie-week-view /work/repo/dist
 ```
 
-Every command in `.factory/claims.json` was also run separately from the fresh
-clone `/tmp/tmp.tdJppi7Nel/clone`; all 18 passed and selected one browser test.
-Live Playwright checks covered 390×844 and 1440×900, demo isolation with a
-pre-existing real-data sentinel, same-origin request logging, offline reload,
-route metadata/link crawling, route-change focus, axe, and target measurement.
+Deployment `6fd24fe5-5368-4984-80ff-3cb4cf5ed86a` succeeded to
+<https://calorie-week-view.sociobot.in>. The product remains a local-first Vite
+TypeScript PWA with the existing topographic-cartography visual system.
 
-## Left to do
+## What changed
 
-Address F-1-1 through F-1-20 and repeat the entire adversarial checklist. Do not
-add AI or sync solely to close this review; neither is implied by the brief.
+- Closed F-1-1 through F-1-7 with four new observable demo/display claims and
+  expanded CSV import/export claims. The new tests cover one-click sample data,
+  reset, real/demo isolation, weekly chart/macro/weight details, CSV schema,
+  and comma-separated output.
+- Rewrote every F-1-9 through F-1-20 copy item in the landing page, app, README,
+  and privacy explanation. The catalog description is now a verb-first 75-byte
+  sentence in `.factory/catalog-description.txt`.
+- Closed F-1-8: SPA navigation now updates canonical, Open Graph, and Twitter
+  title/description/URL values. `404.html` now includes complete social tags and
+  the Apple touch icon.
+- Preserved all earlier V-/V2-/V3-/V4-/V5-series repairs; their regression and
+  claim tests continue to pass. The full finding map is `.factory/polish-1.md`.
+
+## Exact verification
+
+- Fresh local `npm ci && npm test`: PASS — 15 Vitest unit/contract tests,
+  TypeScript production build, and 33 Chromium browser tests.
+- A new clone at commit `968f40c6878c3bd0da6d747044b0bb9d33ecd5a5` ran its full
+  suite after `npm ci`, then every one of the 22 exact commands in
+  `.factory/claims.json` in manifest order. All passed and each selected one
+  tagged browser test.
+- `npm run build`: PASS — `dist/index.html` exists; initial JavaScript is
+  36.90 kB raw / 12.46 kB gzip and CSS is 19.42 kB raw / 5.10 kB gzip.
+- Local `verify-url.sh`: PASS — title, `lang`, one h1/main, image alternatives,
+  button labels, and console/page errors all pass. Captures and JSON report:
+  `.factory/qa-artifacts/polish-1/local-verify/`.
+- Live `verify-url.sh`: PASS in 745 ms with the same checks and no console/page
+  errors. Captures and JSON report:
+  `.factory/qa-artifacts/polish-1/live-verify/`.
+- Fresh live 390×844 browser verification: PASS — first-screen wording, one
+  click to `/demo`, demo reset, demo exit with a preserved real-data sentinel,
+  route-specific metadata, designed HTTP 404, no serious/critical axe findings,
+  and offline demo reload all passed. Direct
+  `https://calorie-week-view.sociobot.in/?demo=1` showed the persistent banner,
+  Reset demo, and Start for real. Screenshots:
+  `.factory/qa-artifacts/polish-1/live-demo.png` and
+  `.factory/qa-artifacts/polish-1/live-home-mobile.png`.
+
+## Known gaps
+
+None. There is deliberately no account, sync, food search, coaching, payment,
+backend, or AI call; those are outside the researched local-first weekly-review
+job and the public scope claims say so.
 
 ---
 
