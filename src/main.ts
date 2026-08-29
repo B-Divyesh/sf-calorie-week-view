@@ -12,7 +12,7 @@ const root = document.querySelector<HTMLDivElement>('#app');
 if (!root) throw new Error('App root is missing.');
 const app: HTMLDivElement = root;
 
-const BUILD_ID = '1.0.2';
+const BUILD_ID = '1.0.3';
 let store: WeekStore | null = null;
 let records: DayRecord[] = [];
 let settings: Settings = { ...DEFAULT_SETTINGS };

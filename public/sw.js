@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calorie-week-view-v1.0.4';
+const CACHE_NAME = 'calorie-week-view-v1.0.5';
 const SHELL = [
   '/', '/app', '/demo', '/privacy', '/terms', '/offline.html', '/static.css',
   '/manifest.webmanifest', '/icons/favicon.svg', '/icons/icon-192.png',
