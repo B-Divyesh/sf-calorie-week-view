@@ -2,15 +2,16 @@
 
 ## Release decision: PASS
 
-Repair commits `968f40c` (product) and `2debf52` (local polish evidence) were
-pushed to `main` on August 29, 2026 UTC. The static build was deployed through
-the configured work-order command:
+Repair commits `968f40c` (product), `2debf52` (local polish evidence), and
+`bca5459` (PWA release rollover) were pushed to `main` on August 29, 2026 UTC.
+The static build was deployed through the configured work-order command:
 
 ```bash
 /opt/fleet/lib/deploy-static.sh calorie-week-view /work/repo/dist
 ```
 
-Deployment `6fd24fe5-5368-4984-80ff-3cb4cf5ed86a` succeeded to
+Deployments `6fd24fe5-5368-4984-80ff-3cb4cf5ed86a` and the final 1.0.3 cache
+rollover succeeded to
 <https://calorie-week-view.sociobot.in>. The product remains a local-first Vite
 TypeScript PWA with the existing topographic-cartography visual system.
 
@@ -26,6 +27,9 @@ TypeScript PWA with the existing topographic-cartography visual system.
 - Closed F-1-8: SPA navigation now updates canonical, Open Graph, and Twitter
   title/description/URL values. `404.html` now includes complete social tags and
   the Apple touch icon.
+- Advanced the installed release to 1.0.3 and the cache namespace to
+  `calorie-week-view-v1.0.5`, so existing PWA clients receive the repaired app
+  shell instead of remaining on cached pre-repair assets.
 - Preserved all earlier V-/V2-/V3-/V4-/V5-series repairs; their regression and
   claim tests continue to pass. The full finding map is `.factory/polish-1.md`.
 
@@ -33,7 +37,7 @@ TypeScript PWA with the existing topographic-cartography visual system.
 
 - Fresh local `npm ci && npm test`: PASS — 15 Vitest unit/contract tests,
   TypeScript production build, and 33 Chromium browser tests.
-- A new clone at commit `968f40c6878c3bd0da6d747044b0bb9d33ecd5a5` ran its full
+- A new clone at final product commit `bca5459` ran its full
   suite after `npm ci`, then every one of the 22 exact commands in
   `.factory/claims.json` in manifest order. All passed and each selected one
   tagged browser test.
@@ -42,7 +46,7 @@ TypeScript PWA with the existing topographic-cartography visual system.
 - Local `verify-url.sh`: PASS — title, `lang`, one h1/main, image alternatives,
   button labels, and console/page errors all pass. Captures and JSON report:
   `.factory/qa-artifacts/polish-1/local-verify/`.
-- Live `verify-url.sh`: PASS in 745 ms with the same checks and no console/page
+- Final live `verify-url.sh`: PASS in 812 ms with the same checks and no console/page
   errors. Captures and JSON report:
   `.factory/qa-artifacts/polish-1/live-verify/`.
 - Fresh live 390×844 browser verification: PASS — first-screen wording, one
@@ -52,7 +56,9 @@ TypeScript PWA with the existing topographic-cartography visual system.
   `https://calorie-week-view.sociobot.in/?demo=1` showed the persistent banner,
   Reset demo, and Start for real. Screenshots:
   `.factory/qa-artifacts/polish-1/live-demo.png` and
-  `.factory/qa-artifacts/polish-1/live-home-mobile.png`.
+  `.factory/qa-artifacts/polish-1/live-home-mobile.png`. A final fresh live
+  `?demo=1` context confirmed its banner/actions, zero serious/critical mobile
+  axe findings, and an offline demo reload under cache `v1.0.5`.
 
 ## Known gaps
 

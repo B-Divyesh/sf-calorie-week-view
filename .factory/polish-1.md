@@ -50,3 +50,7 @@ passed the one-click demo, reset, real/demo isolation, metadata, mobile axe,
 offline reload, direct `?demo=1`, and HTTP 404 checks. Live evidence is in
 `qa-artifacts/polish-1/live-verify/`, `qa-artifacts/polish-1/live-demo.png`,
 and `qa-artifacts/polish-1/live-home-mobile.png`.
+
+The final PWA shell is release 1.0.3 with cache `calorie-week-view-v1.0.5`;
+a fresh live `?demo=1` check also passed its banner/reset actions, mobile axe,
+and offline reload after that cache rollover.
