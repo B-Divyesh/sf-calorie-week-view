@@ -11,7 +11,7 @@ order command:
 ```
 
 Azure Static Web Apps deployment
-`1a1638fc-af0f-4c13-bc97-cc2de9bcba6e` succeeded. The cold-checked production
+`9a9b1c56-3e85-41fa-b1f9-4af2de0dbd1c` succeeded. The cold-checked production
 URL is <https://calorie-week-view.sociobot.in>.
 
 ## What changed
@@ -49,7 +49,7 @@ unchanged.
   is 19.42 kB raw / 5.10 kB gzip; fonts total 46.97 kB; the served hero WebP is
   42.81 kB. Live and local JS/CSS SHA-256 values match.
 - Local `verify-url.sh` passed in 555 ms. A final cold live `verify-url.sh`
-  run passed in 949 ms
+  run passed in 630 ms
   with the correct title, `lang=en`, one h1, one main, alt text on every image,
   labelled buttons, and no console or page errors. Evidence:
   `.factory/qa-artifacts/polish-3/{local-verify,live-verify,live-verify-final}/`.

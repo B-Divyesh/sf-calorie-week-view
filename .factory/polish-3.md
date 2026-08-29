@@ -1,7 +1,7 @@
 # Polish round 3
 
 Release `1.0.5` · functional repair `744381d303b9a97e9d31b4d8b0b59264a17cdc8f`
-· deployment `1a1638fc-af0f-4c13-bc97-cc2de9bcba6e` · live URL:
+· deployment `9a9b1c56-3e85-41fa-b1f9-4af2de0dbd1c` · live URL:
 <https://calorie-week-view.sociobot.in>
 
 Every `.factory/review-*.md` and `.factory/polish-*.md` available before this

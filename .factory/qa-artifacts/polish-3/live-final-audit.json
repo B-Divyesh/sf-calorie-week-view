@@ -1,5 +1,6 @@
 {
-  "checkedAt": "2026-08-29T11:06:00Z",
+  "checkedAt": "2026-08-29T11:08:41Z",
+  "deploymentId": "9a9b1c56-3e85-41fa-b1f9-4af2de0dbd1c",
   "origin": "https://calorie-week-view.sociobot.in",
   "routes": [
     { "path": "/", "status": 200, "title": "Calorie Week View — Review a week at once", "h1": "Review your calories by week" },
