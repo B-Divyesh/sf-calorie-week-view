@@ -6,6 +6,11 @@ exceeds 22 words. No line uses a banned word.
 
 | Copy | Words | Flag |
 | --- | ---: | --- |
+| Skip to main content | 4 | — |
+| Calorie Week View | 3 | — |
+| Review | 1 | — |
+| Demo | 1 | — |
+| Privacy | 1 | — |
 | Weekly calorie review | 3 | — |
 | Review your calories by week | 5 | — |
 | For food loggers who want to compare seven days without daily scores or suggested targets. | 15 | — |
@@ -33,12 +38,16 @@ exceeds 22 words. No line uses a banned word.
 | Export or print the week | 5 | — |
 | Export CSV or JSON. | 4 | — |
 | Print one week for your own records. | 7 | — |
-| What this tool does not do | 6 | — |
+| What Calorie Week View does not do | 7 | — |
 | You choose the range | 4 | — |
 | This tool does not set calorie targets, diagnose health, or judge a day. | 13 | — |
 | It does not include food search or coaching. | 8 | — |
 | Delete or export your whole log from the review screen. | 10 | — |
-| See your calorie week without a daily score. | 9 | — |
+| See your calorie week without a daily score. | 8 | — |
+| Terms | 1 | — |
+| Built by Param Factory | 4 | — |
+| external site | 2 | — |
+| Version 1.0.5 | 2 | — |
 | Original generated map art | 4 | — |
 
 Read-aloud check: “Review your calories by week. Try it with sample data to see
@@ -58,5 +67,5 @@ one breath and describes the demo accurately.
 | User's non-demo records | log |
 | Calories measurement | kcal |
 
-Catalog description: “Compare seven days of calories, macros, and weight without
-daily scores.” (72 characters)
+Catalog description: “Review calories, macros, and weight across seven days without
+daily scores.” (75 characters)

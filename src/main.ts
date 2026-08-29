@@ -12,7 +12,7 @@ const root = document.querySelector<HTMLDivElement>('#app');
 if (!root) throw new Error('App root is missing.');
 const app: HTMLDivElement = root;
 
-const BUILD_ID = '1.0.4';
+const BUILD_ID = '1.0.5';
 let store: WeekStore | null = null;
 let records: DayRecord[] = [];
 let settings: Settings = { ...DEFAULT_SETTINGS };
@@ -120,8 +120,8 @@ function homePage(): string {
       </section>
 
       <section class="limits-section" aria-labelledby="limits-title">
-        <div><p class="eyebrow">What this tool does not do</p><h2 id="limits-title">You choose the range</h2></div>
-        <div class="measure"><p>This tool does not set calorie targets, diagnose health, or judge a day. It does not include food search or coaching.</p><p>Delete or export your whole log from the review screen.</p></div>
+        <div><h2 id="limits-title">What Calorie Week View does not do</h2></div>
+        <div class="measure"><p>You choose the range.</p><p>This tool does not set calorie targets, diagnose health, or judge a day.</p><p>It does not include food search or coaching.</p><p>Delete or export your whole log from the review screen.</p></div>
       </section>
     </main>`);
 }
@@ -137,7 +137,7 @@ function staticPreview(): string {
 
 function infoPage(kind: 'privacy' | 'terms'): string {
   const privacy = kind === 'privacy';
-  const heading = privacy ? 'Your log stays with you' : 'Use it as a reflection tool';
+  const heading = privacy ? 'Your log stays with you' : 'Terms for Calorie Week View';
   setMetadata(`${privacy ? 'Privacy' : 'Terms'} — Calorie Week View`, privacy ? 'How Calorie Week View stores and protects your local data.' : 'Terms for using Calorie Week View.', `/${kind}`);
   return page(`<main id="main" class="prose-page contour-field"><p class="eyebrow">${privacy ? 'Privacy' : 'Terms'}</p><h1 tabindex="-1">${heading}</h1>
     ${privacy ? `

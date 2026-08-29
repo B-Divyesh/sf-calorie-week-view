@@ -14,7 +14,7 @@ test('works offline after the first visit @claim:offline-reload', async ({ page,
   await page.waitForFunction(async () => {
     const script = document.querySelector<HTMLScriptElement>('script[type="module"]')?.src;
     const stylesheet = document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]')?.href;
-    const cache = await caches.open('calorie-week-view-v1.0.6');
+    const cache = await caches.open('calorie-week-view-v1.0.7');
     return Boolean(script && stylesheet && await cache.match(script, { ignoreVary: true }) && await cache.match(stylesheet, { ignoreVary: true }) && await cache.match('/demo', { ignoreVary: true }));
   });
   await context.setOffline(true);
@@ -412,6 +412,33 @@ test('keeps route titles, landmarks, links, and console clean', async ({ page })
   expect(errors).toEqual([]);
 });
 
+test('uses literal route headings and removes reflection-tool copy @regression:route-heading-copy', async ({ page }) => {
+  const routeHeadings = [
+    ['/', 'Review your calories by week'],
+    ['/app', 'Review your calorie week'],
+    ['/demo', 'Review your calorie week'],
+    ['/privacy', 'Your log stays with you'],
+    ['/terms', 'Terms for Calorie Week View'],
+    ['/not-a-route', 'Page not found'],
+  ];
+
+  for (const [route, heading] of routeHeadings) {
+    await page.goto(route);
+    await expect(page.getByRole('heading', { level: 1, name: heading, exact: true })).toHaveCount(1);
+    await expect(page.locator('body')).not.toContainText(/reflection tool/i);
+  }
+});
+
+test('gives every landing section a literal h2 @regression:landing-heading-outline', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('main h2')).toHaveText([
+    'Example seven-day calorie review',
+    'Turn entries into one review',
+    'What Calorie Week View does not do',
+  ]);
+  await expect(page.getByText('You choose the range.', { exact: true })).toHaveCount(1);
+});
+
 test('supports a 390px keyboard entry path with optional fields @claim:manual-entry', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/demo');
@@ -483,6 +510,24 @@ test('the static 404 uses the standard shell and literal copy @regression:404-sh
   await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute('content', 'Return to Calorie Week View.');
   await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute('content', /social-card\.png$/);
   await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', '/icons/apple-touch-icon.png');
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations.filter((item) => ['serious', 'critical'].includes(item.impact ?? ''))).toEqual([]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('the offline fallback uses the standard shell and literal copy @regression:offline-shell-copy', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/offline.html');
+  await expect(page).toHaveTitle('Offline — Calorie Week View');
+  await expect(page.getByRole('banner')).toHaveCount(1);
+  await expect(page.getByRole('navigation', { name: 'Main navigation' })).toHaveCount(1);
+  await expect(page.getByRole('main')).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1, name: 'This page is not available offline' })).toHaveCount(1);
+  await expect(page.getByRole('contentinfo')).toHaveCount(1);
+  await expect(page.getByRole('link', { name: 'Return to your review' })).toBeVisible();
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://calorie-week-view.sociobot.in/offline');
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', 'Offline — Calorie Week View');
+  await expect(page.locator('body')).not.toContainText(/beyond the cached map/i);
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations.filter((item) => ['serious', 'critical'].includes(item.impact ?? ''))).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -603,7 +648,7 @@ test('Start for real discards the demo database and reseeds a later demo @regres
 
 test('every interactive target is at least 44 by 44 CSS pixels at 390px @regression:mobile-target-size', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  for (const route of ['/', '/demo', '/privacy', '/terms', '/404.html']) {
+  for (const route of ['/', '/demo', '/privacy', '/terms', '/404.html', '/offline.html']) {
     await page.goto(route);
     const undersized = await page.locator('a[href], button, input, select, textarea, [tabindex="0"]').evaluateAll((elements) => elements.flatMap((element) => {
       const style = getComputedStyle(element);
