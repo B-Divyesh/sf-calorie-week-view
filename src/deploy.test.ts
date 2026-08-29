@@ -25,9 +25,9 @@ describe('static deployment routing', () => {
     const webManifest = JSON.parse(readFileSync(resolve(process.cwd(), 'public/manifest.webmanifest'), 'utf8')) as WebManifest;
     const appSource = readFileSync(resolve(process.cwd(), 'src/main.ts'), 'utf8');
     const serviceWorker = readFileSync(resolve(process.cwd(), 'public/sw.js'), 'utf8');
-    expect(packageManifest.version).toBe('1.0.3');
-    expect(webManifest.start_url).toBe('/app?v=1.0.3');
-    expect(appSource).toContain("const BUILD_ID = '1.0.3'");
-    expect(serviceWorker).toContain("const CACHE_NAME = 'calorie-week-view-v1.0.5'");
+    expect(packageManifest.version).toBe('1.0.4');
+    expect(webManifest.start_url).toBe('/app?v=1.0.4');
+    expect(appSource).toContain("const BUILD_ID = '1.0.4'");
+    expect(serviceWorker).toContain("const CACHE_NAME = 'calorie-week-view-v1.0.6'");
   });
 });

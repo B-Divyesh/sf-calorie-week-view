@@ -75,6 +75,8 @@ Prompt sheet:
 Generated with the factory image deployment on 2026-08-28. The resulting art is
 original for this product. Prompts are stored beside the source image. Icons and chart
 graphics are authored in this repository under the MIT license.
+`assets/src/weekly-terrain.provenance.json` binds the reviewed source and each
+published derivative by SHA-256 for the public provenance claim.
 
 ## Why this fits
 

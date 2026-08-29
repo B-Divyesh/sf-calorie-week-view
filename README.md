@@ -81,5 +81,6 @@ See [`.factory/design.md`](.factory/design.md) for the topographic visual system
 ## License
 
 Source code is MIT licensed. Atkinson Hyperlegible is distributed under the
-SIL Open Font License; its license ships beside the font files. Generated map
-art is original to this product, with its prompt and review in `assets/src/`.
+SIL Open Font License; its license ships beside the font files. The map art was
+generated for this product. Its source, prompt, review, and published-file
+hashes are recorded in `assets/src/`.

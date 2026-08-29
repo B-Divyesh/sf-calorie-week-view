@@ -2,7 +2,7 @@
   "name": "Calorie Week View",
   "short_name": "Week View",
   "description": "Review seven days of calories, macros, and weight.",
-  "start_url": "/app?v=1.0.3",
+  "start_url": "/app?v=1.0.4",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f4f0e5",

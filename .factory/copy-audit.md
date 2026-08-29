@@ -42,7 +42,8 @@ exceeds 22 words. No line uses a banned word.
 | Original generated map art | 4 | — |
 
 Read-aloud check: “Review your calories by week. Try it with sample data to see
-a complete week.” This states the job and first action in one breath.
+six sample days and one missing day.” This states the job and first action in
+one breath and describes the demo accurately.
 
 ## Terminology
 
@@ -57,5 +58,5 @@ a complete week.” This states the job and first action in one breath.
 | User's non-demo records | log |
 | Calories measurement | kcal |
 
-Catalog description: “Review seven days of calories, macros, and weight without
-daily scores.” (75 characters)
+Catalog description: “Compare seven days of calories, macros, and weight without
+daily scores.” (76 characters)

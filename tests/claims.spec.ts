@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 test('works offline after the first visit @claim:offline-reload', async ({ page, context }) => {
   await page.goto('/demo');
@@ -11,7 +14,7 @@ test('works offline after the first visit @claim:offline-reload', async ({ page,
   await page.waitForFunction(async () => {
     const script = document.querySelector<HTMLScriptElement>('script[type="module"]')?.src;
     const stylesheet = document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]')?.href;
-    const cache = await caches.open('calorie-week-view-v1.0.5');
+    const cache = await caches.open('calorie-week-view-v1.0.6');
     return Boolean(script && stylesheet && await cache.match(script, { ignoreVary: true }) && await cache.match(stylesheet, { ignoreVary: true }) && await cache.match('/demo', { ignoreVary: true }));
   });
   await context.setOffline(true);
@@ -149,6 +152,41 @@ test('shows all week summary details in the demo @claim:weekly-display', async (
   for (const value of ['119 g', '228 g', '70 g']) await expect(page.getByText(value)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Optional weight trend' })).toBeVisible();
   for (const weight of ['72.8', '72.6', '72.5', '72.3']) await expect(page.locator('.weight-chart').getByText(weight, { exact: true })).toBeVisible();
+});
+
+test('records the generated map art source and published files @claim:art-provenance', async ({ page }) => {
+  const root = process.cwd();
+  const provenance = JSON.parse(readFileSync(resolve(root, 'assets/src/weekly-terrain.provenance.json'), 'utf8')) as {
+    model: string;
+    generated: string;
+    promptFile: string;
+    reviewFile: string;
+    files: Record<string, string>;
+  };
+  expect(provenance.model).toBe('factory-image');
+  expect(provenance.generated).toBe('2026-08-28');
+
+  const prompt = JSON.parse(readFileSync(resolve(root, provenance.promptFile), 'utf8')) as { deployment: string; prompt: string };
+  const review = JSON.parse(readFileSync(resolve(root, provenance.reviewFile), 'utf8')) as { model: string; prompt: string; review: string };
+  expect(prompt.deployment).toBe('factory-image');
+  expect(prompt.prompt).toBe(review.prompt);
+  expect(review.model).toBe('factory-image');
+  expect(review.review).toMatch(/^Accepted:/);
+
+  for (const [file, expectedHash] of Object.entries(provenance.files)) {
+    const actualHash = createHash('sha256').update(readFileSync(resolve(root, file))).digest('hex');
+    expect(actualHash, file).toBe(expectedHash);
+  }
+
+  await page.goto('/');
+  const art = page.getByRole('img', { name: 'Layered paper contour lines show a seven-ridge weekly landscape.' });
+  await expect(art).toBeVisible();
+  await expect(art).toHaveJSProperty('naturalWidth', 768);
+  const currentSource = await art.evaluate((image: HTMLImageElement) => new URL(image.currentSrc).pathname);
+  expect(currentSource).toBe('/art/weekly-terrain.webp');
+  const response = await page.request.get(currentSource);
+  expect(response.ok()).toBe(true);
+  expect(createHash('sha256').update(await response.body()).digest('hex')).toBe(provenance.files['public/art/weekly-terrain.webp']);
 });
 
 test('keeps demo traffic and storage local @claim:local-private', async ({ page }) => {
