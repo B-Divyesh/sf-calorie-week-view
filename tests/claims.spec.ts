@@ -742,6 +742,22 @@ test('every interactive target is at least 44 by 44 CSS pixels at 390px @regress
   expect(dialogTargets).toEqual([]);
 });
 
+test('respects reduced motion and 200% text at 390px @regression:motion-text-resize', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/demo');
+  const animationSeconds = await page.locator('.trace-in').first().evaluate((element) => {
+    const duration = getComputedStyle(element).animationDuration;
+    return duration.endsWith('ms') ? Number.parseFloat(duration) / 1000 : Number.parseFloat(duration);
+  });
+  expect(animationSeconds).toBeLessThanOrEqual(0.00001);
+  for (const route of ['/', '/demo']) {
+    await page.goto(route);
+    await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  }
+});
+
 test('rejects every oversized CSV field without partial writes @regression:csv-record-bounds', async ({ page }) => {
   await page.goto('/demo');
   await page.locator('#csv-input').setInputFiles({
