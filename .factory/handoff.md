@@ -793,3 +793,25 @@ present. The demo remains `/demo` (or `?demo=1`), with its isolated
 - CSV dates must use `YYYY-MM-DD`; calories are required; any supplied macro
   or weight value must be a non-negative number.
 - Weight-unit changes relabel stored values rather than converting them.
+
+---
+
+# Handoff — adversarial first-read review 2
+
+## Result: FAIL
+
+Reviewer-only documentation was added; no product code, assets, configuration, or deployment state was changed.
+
+The live product was checked at 390 px and desktop in fresh browser contexts. The first screen is clear, and the one-click demo, reset/exit isolation, same-origin privacy behavior, offline reload, routing, metadata, 404, links, accessibility, and visual identity passed. A clean clone ran all 22 exact claim commands separately, then `npm test` (15 unit/contract and 33 browser tests) and `npm run build`; all passed.
+
+The report is `.factory/review-2.md`. It records one remaining minor finding: F-2-1, an unlisted README statement about original generated art provenance. Remove that public statement or add an exact clean-clone claim test for it, then repeat the full review. No product remediation was performed by this reviewer.
+
+## How to verify
+
+```bash
+npm ci
+npm test
+npm run build
+```
+
+For the live demo, open `https://calorie-week-view.sociobot.in/demo` or choose **Try it with sample data** on the landing page. Check the persistent banner, **Reset demo**, and **Start for real** in a fresh browser context.
