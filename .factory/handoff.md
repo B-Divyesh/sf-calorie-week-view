@@ -1,3 +1,44 @@
+# Handoff — independent verification 7
+
+## Release decision: PASS
+
+Candidate `4527b8e418c8a4c92c384bd794008dd6a775e3ce` was independently
+verified on 2026-08-29 UTC against
+<https://calorie-week-view.sociobot.in>. No product code was modified. The live
+release is byte-identical to the fresh candidate build across the HTML, hashed
+bundles, worker, manifest, public metadata/assets, and real 404 response.
+
+- The cold first screen plainly states the weekly-review job, the food-logger
+  audience, and the one-click **Try it with sample data** action. The click opens
+  the isolated, useful sample with its persistent demo banner and controls.
+- All 22 exact commands in `.factory/claims.json` passed independently after
+  `npm ci`. `npm test` also passed: 15 unit/contract tests, the production
+  TypeScript build, and 33 Chromium tests. A separate exact `npm run build`
+  passed and produced `dist/`.
+- Live desktop, 390 px mobile, keyboard focus, dark mode, 200% text, reduced
+  motion, hard numeric boundaries, invalid settings/CSV recovery, empty-state
+  reset, route history/metadata, and link crawling passed. Axe found zero
+  serious/critical findings in desktop, mobile, and dark scans.
+- The live demo save flow made only same-origin requests and opened only
+  `demo:calorie-week-view`. Security and cache headers pass. There were no
+  console/page errors or failed requests.
+- The live worker controlled `/demo`, used cache
+  `calorie-week-view-v1.0.5`, and retained the populated sample through a fully
+  offline reload. A controlled worker-byte update displayed the in-app update
+  notice.
+- Bundles remain within budget: 12.46 kB JS gzip, 5.10 kB CSS gzip, 46.97 kB
+  fonts, and a 42.81 kB hero. Live mobile Lighthouse scored 96 performance and
+  100 accessibility / best practices / SEO, with 1.4 s LCP and 0.033 CLS.
+- This static PWA has no server product endpoint, unlock call, account, payment,
+  sign-in, backend, package API, CLI, or AI call. The corresponding 429,
+  concurrency, Entra, and consumer-install checks are not applicable.
+
+No defects were found at release-blocking, high, medium, or low severity.
+Detailed evidence: `.factory/verification-7.md` and
+`.factory/verification-artifacts/verify7-{local,live}/`.
+
+---
+
 # Handoff — polish round 1
 
 ## Release decision: PASS
