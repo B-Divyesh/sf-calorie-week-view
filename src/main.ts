@@ -30,9 +30,16 @@ function routePath(): string {
 }
 
 function setMetadata(title: string, description: string, path: string): void {
+  const url = `https://calorie-week-view.sociobot.in${path}`;
   document.title = title;
   document.querySelector<HTMLMetaElement>('meta[name="description"]')?.setAttribute('content', description);
-  document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.setAttribute('href', `https://calorie-week-view.sociobot.in${path}`);
+  document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.setAttribute('href', url);
+  const set = (selector: string, value: string) => document.querySelector<HTMLMetaElement>(selector)?.setAttribute('content', value);
+  set('meta[property="og:title"]', title);
+  set('meta[property="og:description"]', description);
+  set('meta[property="og:url"]', url);
+  set('meta[name="twitter:title"]', title);
+  set('meta[name="twitter:description"]', description);
 }
 
 function navigate(path: string): void {
@@ -70,17 +77,17 @@ function page(content: string, active = ''): string {
 }
 
 function homePage(): string {
-  setMetadata('Calorie Week View — Review a week at once', 'Review seven days of calories, macros, and weight in one calm, private view.', '/');
+  setMetadata('Calorie Week View — Review a week at once', 'Review seven days of calories, macros, and weight in one private view.', '/');
   return page(`
     <main id="main">
       <section class="hero contour-field" aria-labelledby="home-title">
         <div class="hero-copy">
-          <p class="eyebrow">A weekly reflection tool</p>
+          <p class="eyebrow">Weekly calorie review</p>
           <h1 id="home-title" tabindex="-1">Review your calories by week</h1>
-          <p class="lede">For food loggers who want the weekly pattern without streaks, scores, or automatic targets.</p>
+          <p class="lede">For food loggers who want to compare seven days without daily scores or suggested targets.</p>
           <div class="hero-actions">
             <button class="button primary" data-route="/demo">Try it with sample data</button>
-            <span>See a complete week before adding your own entries.</span>
+            <span>See six sample days and one missing day before adding your own entries.</span>
           </div>
           <a class="secondary-link" href="/app" data-route="/app">Start with a blank week</a>
           <ul class="plain-facts" aria-label="Product facts">
@@ -92,14 +99,14 @@ function homePage(): string {
         <figure class="hero-art">
           <picture>
             <source srcset="/art/weekly-terrain.webp" type="image/webp" />
-            <img src="/art/weekly-terrain.png" alt="Layered paper contour lines turn seven ridges into a calm weekly landscape." width="768" height="512" fetchpriority="high" decoding="async" />
+            <img src="/art/weekly-terrain.png" alt="Layered paper contour lines show a seven-ridge weekly landscape." width="768" height="512" fetchpriority="high" decoding="async" />
           </picture>
-          <figcaption>Read the shape of a week, not a daily score.</figcaption>
+          <figcaption>Compare all seven days without a daily score.</figcaption>
         </figure>
       </section>
 
       <section class="preview-section" aria-labelledby="preview-title">
-        <div class="section-heading"><p class="eyebrow">The weekly map</p><h2 id="preview-title">Seven days stay in context</h2><p>Missing days stay blank. Averages use only the days you logged.</p></div>
+        <div class="section-heading"><p class="eyebrow">Example calorie chart</p><h2 id="preview-title">Example seven-day calorie review</h2><p>Missing days stay blank. Averages use only the days you logged.</p></div>
         ${staticPreview()}
       </section>
 
@@ -108,12 +115,12 @@ function homePage(): string {
         <ol class="trail-steps">
           <li><span>01</span><div><h3>Add daily totals</h3><p>Type calories and optional macros or weight. You can also import CSV.</p></div></li>
           <li><span>02</span><div><h3>Read the week</h3><p>Compare your logged-day average with the range you chose.</p></div></li>
-          <li><span>03</span><div><h3>Keep your copy</h3><p>Export CSV or JSON. Print one week for your own records.</p></div></li>
+          <li><span>03</span><div><h3>Export or print the week</h3><p>Export CSV or JSON. Print one week for your own records.</p></div></li>
         </ol>
       </section>
 
       <section class="limits-section" aria-labelledby="limits-title">
-        <div><p class="eyebrow">A quiet boundary</p><h2 id="limits-title">You choose the range</h2></div>
+        <div><p class="eyebrow">What this tool does not do</p><h2 id="limits-title">You choose the range</h2></div>
         <div class="measure"><p>This tool does not set calorie targets, diagnose health, or judge a day. It does not include food search or coaching.</p><p>Delete or export your whole log from the review screen.</p></div>
       </section>
     </main>`);
@@ -135,7 +142,7 @@ function infoPage(kind: 'privacy' | 'terms'): string {
   return page(`<main id="main" class="prose-page contour-field"><p class="eyebrow">${privacy ? 'Privacy' : 'Terms'}</p><h1 tabindex="-1">${heading}</h1>
     ${privacy ? `
       <p class="lede">Calorie Week View stores your entries and settings in your browser.</p>
-      <h2>What is stored</h2><p>Daily calories, optional macros, optional weight, notes, and your chosen range are stored in IndexedDB on this device.</p>
+      <h2>What is stored</h2><p>Daily calories, optional macros, optional weight, notes, and your chosen range are stored in this browser.</p>
       <h2>What leaves your device</h2><p>The app sends no log data to us. It has no analytics, account system, ads, or third-party scripts.</p>
       <h2>Demo separation</h2><p>Demo data uses a separate browser database. The demo does not read or change your real log.</p>
       <h2>Your controls</h2><p>Export CSV or JSON from the review screen. Choose “Delete my log” to remove all stored entries and settings.</p>
@@ -209,7 +216,7 @@ function reviewPage(): string {
   setMetadata(`${demoMode ? 'Demo' : 'Weekly review'} — Calorie Week View`, 'Review your seven-day calorie, macro, and weight pattern.', demoMode ? '/demo' : '/app');
   return page(`<main id="main" class="app-main">
     <section class="review-heading contour-field">
-      <div><p class="eyebrow">${demoMode ? 'Sample week' : 'Your weekly map'}</p><h1 tabindex="-1">Review your calorie week</h1><p>Missing days stay blank and do not lower your average.</p></div>
+      <div><p class="eyebrow">${demoMode ? 'Sample week' : 'Weekly review'}</p><h1 tabindex="-1">Review your calorie week</h1><p>Missing days stay blank and do not lower your average.</p></div>
       <div class="week-controls" aria-label="Choose a week"><button class="icon-button" data-action="previous-week" aria-label="Previous week">←</button><button class="week-label" data-action="this-week">${formatWeekRange(weekStart)}</button><button class="icon-button" data-action="next-week" aria-label="Next week">→</button></div>
     </section>
 
@@ -219,25 +226,25 @@ function reviewPage(): string {
     </section>
 
     <section class="map-sheet chart-section" aria-labelledby="calorie-chart-title">
-      <div class="chart-heading"><div><p class="eyebrow">Contour 01</p><h2 id="calorie-chart-title">Calories across seven days</h2></div><div class="legend"><span class="range-key"></span>Your range</div></div>
+      <div class="chart-heading"><div><p class="eyebrow">Calorie chart</p><h2 id="calorie-chart-title">Calories across seven days</h2></div><div class="legend"><span class="range-key"></span>Your range</div></div>
       ${calorieChart(slots)}
     </section>
 
     <section class="map-sheet weight-section" aria-labelledby="weight-chart-title">
-      <div class="chart-heading"><div><p class="eyebrow">Contour 02</p><h2 id="weight-chart-title">Optional weight trend</h2></div><span>${settings.weightUnit}</span></div>
+      <div class="chart-heading"><div><p class="eyebrow">Weight chart</p><h2 id="weight-chart-title">Optional weight trend</h2></div><span>${settings.weightUnit}</span></div>
       ${weightChart(slots)}
     </section>
 
     <section class="entries-section" aria-labelledby="entries-title">
-      <div class="section-row"><div><p class="eyebrow">Field notes</p><h2 id="entries-title">Daily entries</h2></div><button class="button primary" data-action="add-entry">Add daily totals</button></div>
+      <div class="section-row"><div><p class="eyebrow">Daily records</p><h2 id="entries-title">Daily entries</h2></div><button class="button primary" data-action="add-entry">Add daily totals</button></div>
       ${entriesTable(slots)}
     </section>
 
     <section class="tools-section" aria-labelledby="tools-title"><div><p class="eyebrow">Your records</p><h2 id="tools-title">Import, export, or clear</h2></div>
       <div class="tool-groups">
         <div><h3>Bring in entries</h3><p>CSV needs date and calories columns. Macros, weight, and note are optional.</p><label class="button secondary file-button">Import CSV<input id="csv-input" type="file" accept=".csv,text/csv" /></label><label class="text-link file-button">Import JSON backup<input id="json-input" type="file" accept=".json,application/json" /></label><p class="import-note">JSON backups are checked before import. Invalid files leave your log unchanged.</p></div>
-        <div><h3>Keep a copy</h3><p>CSV works in spreadsheets. JSON keeps entries and settings together.</p><button class="button secondary" data-action="export-csv">Export CSV</button><button class="text-button" data-action="export-json">Export JSON</button><button class="text-button" data-action="print-week">Print this week</button></div>
-        <div><h3>Adjust the map</h3><p>Set your own calorie range, weight unit, and color theme.</p><button class="button secondary" data-action="open-settings">Change settings</button>${demoMode ? '<button class="danger-link" data-action="clear-demo">Clear demo records</button>' : '<button class="danger-link" data-action="delete-all">Delete my log</button>'}</div>
+        <div><h3>Export your records</h3><p>CSV downloads as comma-separated text. JSON keeps entries and settings together.</p><button class="button secondary" data-action="export-csv">Export CSV</button><button class="text-button" data-action="export-json">Export JSON</button><button class="text-button" data-action="print-week">Print this week</button></div>
+        <div><h3>Change your settings</h3><p>Set your own calorie range, weight unit, and color theme.</p><button class="button secondary" data-action="open-settings">Change settings</button>${demoMode ? '<button class="danger-link" data-action="clear-demo">Clear demo records</button>' : '<button class="danger-link" data-action="delete-all">Delete my log</button>'}</div>
       </div>
     </section>
   </main>${dialogs()}`, active);
@@ -298,10 +305,10 @@ function macroLine(record: DayRecord): string {
 }
 
 function dialogs(): string {
-  return `<dialog id="entry-dialog" aria-labelledby="entry-dialog-title"><form id="entry-form" method="dialog"><div class="dialog-heading"><div><p class="eyebrow">Daily field note</p><h2 id="entry-dialog-title">Add daily totals</h2></div><button class="close-button" type="button" data-action="close-dialog" aria-label="Close entry form">×</button></div>
+  return `<dialog id="entry-dialog" aria-labelledby="entry-dialog-title"><form id="entry-form" method="dialog"><div class="dialog-heading"><div><p class="eyebrow">Daily entry</p><h2 id="entry-dialog-title">Add daily totals</h2></div><button class="close-button" type="button" data-action="close-dialog" aria-label="Close entry form">×</button></div>
     <div class="form-grid"><label class="full">Date<input name="date" type="date" required /></label><label class="full">Calories<input name="calories" type="number" min="${RECORD_NUMERIC_RULES.calories.minimum}" max="${RECORD_NUMERIC_RULES.calories.maximum}" step="1" inputmode="numeric" required /><span>Required</span></label><label>Protein (g)<input name="protein" type="number" min="${RECORD_NUMERIC_RULES.protein.minimum}" max="${RECORD_NUMERIC_RULES.protein.maximum}" step="0.1" inputmode="decimal" /></label><label>Carbs (g)<input name="carbs" type="number" min="${RECORD_NUMERIC_RULES.carbs.minimum}" max="${RECORD_NUMERIC_RULES.carbs.maximum}" step="0.1" inputmode="decimal" /></label><label>Fat (g)<input name="fat" type="number" min="${RECORD_NUMERIC_RULES.fat.minimum}" max="${RECORD_NUMERIC_RULES.fat.maximum}" step="0.1" inputmode="decimal" /></label><label>Weight (${settings.weightUnit})<input name="weight" type="number" min="${RECORD_NUMERIC_RULES.weight.minimum}" max="${RECORD_NUMERIC_RULES.weight.maximum}" step="0.1" inputmode="decimal" /></label><label class="full">Note <span>(optional)</span><textarea name="note" maxlength="200" rows="2"></textarea></label></div>
     <p id="entry-error" class="form-error" role="alert"></p><div class="dialog-actions"><button class="danger-link" type="button" data-action="delete-entry" hidden>Delete this entry</button><span></span><button class="button secondary" type="button" data-action="close-dialog">Cancel</button><button class="button primary" type="submit">Save daily totals</button></div></form></dialog>
-    <dialog id="settings-dialog" aria-labelledby="settings-dialog-title"><form id="settings-form" method="dialog"><div class="dialog-heading"><div><p class="eyebrow">Map settings</p><h2 id="settings-dialog-title">Choose your range</h2></div><button class="close-button" type="button" data-action="close-dialog" aria-label="Close settings">×</button></div><p>Enter a range you already use. This tool does not suggest one.</p>
+    <dialog id="settings-dialog" aria-labelledby="settings-dialog-title"><form id="settings-form" method="dialog"><div class="dialog-heading"><div><p class="eyebrow">Weekly settings</p><h2 id="settings-dialog-title">Choose your range</h2></div><button class="close-button" type="button" data-action="close-dialog" aria-label="Close settings">×</button></div><p>Enter a range you already use. This tool does not suggest one.</p>
       <div class="form-grid"><label>Minimum calories<input name="calorieMin" type="number" min="0" max="20000" required value="${settings.calorieMin}" /></label><label>Maximum calories<input name="calorieMax" type="number" min="0" max="20000" required value="${settings.calorieMax}" /></label><label>Weight unit<select name="weightUnit"><option value="kg" ${settings.weightUnit === 'kg' ? 'selected' : ''}>Kilograms (kg)</option><option value="lb" ${settings.weightUnit === 'lb' ? 'selected' : ''}>Pounds (lb)</option></select></label><label>Color theme<select name="theme"><option value="system" ${settings.theme === 'system' ? 'selected' : ''}>Use device setting</option><option value="light" ${settings.theme === 'light' ? 'selected' : ''}>Light</option><option value="dark" ${settings.theme === 'dark' ? 'selected' : ''}>Dark</option></select></label></div><p id="settings-error" class="form-error" role="alert"></p><div class="dialog-actions"><span></span><button class="button secondary" type="button" data-action="close-dialog">Cancel</button><button class="button primary" type="submit">Save settings</button></div></form></dialog>`;
 }
 

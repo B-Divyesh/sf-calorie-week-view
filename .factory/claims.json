@@ -8,14 +8,14 @@
   },
   {
     "id": "csv-export",
-    "claim": "Exports the log as CSV",
+    "claim": "Exports the log as comma-separated CSV text",
     "where": "review toolbar, README",
     "test": "npm test -- --grep '^.*@claim:csv-export$'",
     "sandbox": "fresh browser context at /demo; assert the downloaded header and six sample rows"
   },
   {
     "id": "csv-import",
-    "claim": "Imports daily totals from CSV",
+    "claim": "Imports daily totals from CSV with required YYYY-MM-DD date and calories columns",
     "where": "landing how-it-works, review tools, README",
     "test": "npm test -- --grep '^.*@claim:csv-import$'",
     "sandbox": "fresh browser context at /demo; import a one-row CSV and assert its totals and note"
@@ -124,5 +124,33 @@
     "where": "landing preview, weekly review, README",
     "test": "npm test -- --grep '^.*@claim:logged-day-average$'",
     "sandbox": "fresh browser context at /demo; assert six logged days average to 2,062 and land inside the sample range"
+  },
+  {
+    "id": "demo-sample",
+    "claim": "The demo opens six sample days and one missing day with calorie, macro, weight, and note details",
+    "where": "landing primary-action explanation, demo route, README",
+    "test": "npm test -- --grep '^.*@claim:demo-sample$'",
+    "sandbox": "fresh browser context at /; click Try it with sample data once and assert the demo banner, six logged days, missing Saturday, calorie and macro averages, weight trend, and notes"
+  },
+  {
+    "id": "demo-reset",
+    "claim": "Reset demo restores the original sample entries and settings",
+    "where": "demo banner, README",
+    "test": "npm test -- --grep '^.*@claim:demo-reset$'",
+    "sandbox": "fresh browser context at /demo; change an entry and settings, reset the demo, and assert six sample records and the 1,800–2,200 range return"
+  },
+  {
+    "id": "demo-exit-isolation",
+    "claim": "Starting for real discards demo data without changing the real log",
+    "where": "demo banner, README",
+    "test": "npm test -- --grep '^.*@claim:demo-exit-isolation$'",
+    "sandbox": "fresh browser context; seed the real database, change the demo, start for real, then assert the demo database is gone and the real record is unchanged"
+  },
+  {
+    "id": "weekly-display",
+    "claim": "Shows a seven-day calorie chart, logged-day average, macro averages, and weight trend",
+    "where": "README features",
+    "test": "npm test -- --grep '^.*@claim:weekly-display$'",
+    "sandbox": "fresh browser context at /demo; assert seven chart days, the 2,062 calorie average, protein/carbs/fat averages, and the three sample weight values"
   }
 ]

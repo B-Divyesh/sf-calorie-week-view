@@ -30,6 +30,7 @@ test('exports the sample log as CSV @claim:csv-export', async ({ page }) => {
   if (!stream) throw new Error('CSV download stream was not available.');
   for await (const chunk of stream) chunks.push(Buffer.from(chunk));
   const csv = Buffer.concat(chunks).toString('utf8');
+  expect(download.suggestedFilename()).toBe('calorie-week-view.csv');
   expect(csv.split('\n')[0]).toBe('date,calories,protein_g,carbs_g,fat_g,weight,note');
   expect(csv.split('\n')).toHaveLength(7);
   expect(csv).toContain('Dinner with friends');
@@ -67,6 +68,87 @@ test('imports CSV entries and shows them in a week @claim:csv-import', async ({ 
   await expect(page.getByText('Imported 1 entry from CSV.')).toBeVisible();
   await expect(page.getByRole('cell', { name: '2,300' })).toBeVisible();
   await expect(page.getByText('Note: Imported day')).toBeVisible();
+  await page.locator('#csv-input').setInputFiles({
+    name: 'no-date.csv', mimeType: 'text/csv', buffer: Buffer.from('calories\n2100'),
+  });
+  await expect(page.locator('#toast')).toContainText('The CSV needs date and calories columns.');
+  await page.locator('#csv-input').setInputFiles({
+    name: 'no-calories.csv', mimeType: 'text/csv', buffer: Buffer.from('date\n2026-08-17'),
+  });
+  await expect(page.locator('#toast')).toContainText('The CSV needs date and calories columns.');
+  await page.locator('#csv-input').setInputFiles({
+    name: 'bad-date.csv', mimeType: 'text/csv', buffer: Buffer.from('date,calories\n08/17/2026,2100'),
+  });
+  await expect(page.locator('#toast')).toContainText('Row 2 has an invalid date. Use YYYY-MM-DD.');
+  await expect(page.getByRole('cell', { name: '2,300' })).toBeVisible();
+  await expect(page.getByText('Note: Imported day')).toBeVisible();
+});
+
+test('opens a detailed sample week in one click @claim:demo-sample', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Try it with sample data' }).click();
+  await expect(page).toHaveURL(/\/demo$/);
+  await expect(page.getByLabel('Demo status')).toContainText('sample data, nothing is saved to your log');
+  await expect(page.getByText('6 of 7 days logged')).toBeVisible();
+  await expect(page.locator('.entry-row.is-missing').getByText('Sat')).toBeVisible();
+  await expect(page.getByText('2,062 kcal')).toBeVisible();
+  await expect(page.getByText('119 g')).toBeVisible();
+  await expect(page.getByText('228 g')).toBeVisible();
+  await expect(page.getByText('70 g')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Optional weight trend' })).toBeVisible();
+  for (const weight of ['72.8', '72.6', '72.5', '72.3']) await expect(page.getByRole('cell', { name: `${weight} kg` })).toBeVisible();
+  await expect(page.getByText('Note: Lunch out')).toBeVisible();
+  await expect(page.getByText('Note: Dinner with friends')).toBeVisible();
+});
+
+test('resets edited demo data to its original sample @claim:demo-reset', async ({ page }) => {
+  await page.goto('/demo');
+  await page.locator('.entry-row.is-missing').getByRole('button', { name: 'Add' }).click();
+  await page.getByRole('spinbutton', { name: 'Calories Required' }).fill('2111');
+  await page.getByRole('button', { name: 'Save daily totals' }).click();
+  await expect(page.getByText('7 of 7 days logged')).toBeVisible();
+  await page.getByRole('button', { name: 'Change settings' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Choose your range' });
+  await dialog.getByLabel('Minimum calories').fill('1900');
+  await dialog.getByLabel('Maximum calories').fill('2300');
+  await dialog.getByRole('button', { name: 'Save settings' }).click();
+  await expect(page.getByText('range 1,900–2,300')).toBeVisible();
+  await page.getByRole('button', { name: 'Reset demo' }).click();
+  await expect(page.getByText('Reset the demo to its sample week.')).toBeVisible();
+  await expect(page.getByText('6 of 7 days logged')).toBeVisible();
+  await expect(page.getByText('range 1,800–2,200')).toBeVisible();
+  await expect(page.getByText('Note: Lunch out')).toBeVisible();
+});
+
+test('leaves demo data out of the real log @claim:demo-exit-isolation', async ({ page }) => {
+  await page.goto('/app');
+  await page.getByRole('button', { name: 'Add daily totals' }).click();
+  await page.getByRole('spinbutton', { name: 'Calories Required' }).fill('1777');
+  await page.getByLabel(/Note/).fill('Real storage sentinel');
+  await page.getByRole('button', { name: 'Save daily totals' }).click();
+  await expect(page.getByText('Note: Real storage sentinel')).toBeVisible();
+  await page.goto('/demo');
+  await page.getByRole('button', { name: 'Change settings' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Choose your range' });
+  await dialog.getByLabel('Minimum calories').fill('1900');
+  await dialog.getByLabel('Maximum calories').fill('2300');
+  await dialog.getByRole('button', { name: 'Save settings' }).click();
+  await page.getByRole('button', { name: 'Start for real' }).click();
+  await expect(page).toHaveURL(/\/app$/);
+  await expect(page.getByRole('cell', { name: '1,777' })).toBeVisible();
+  await expect(page.getByText('Note: Real storage sentinel')).toBeVisible();
+  const names = await page.evaluate(async () => (await indexedDB.databases()).map((database) => database.name));
+  expect(names).toContain('calorie-week-view');
+  expect(names).not.toContain('demo:calorie-week-view');
+});
+
+test('shows all week summary details in the demo @claim:weekly-display', async ({ page }) => {
+  await page.goto('/demo');
+  await expect(page.locator('.calorie-chart .day-mark')).toHaveCount(7);
+  await expect(page.getByText('2,062 kcal')).toBeVisible();
+  for (const value of ['119 g', '228 g', '70 g']) await expect(page.getByText(value)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Optional weight trend' })).toBeVisible();
+  for (const weight of ['72.8', '72.6', '72.5', '72.3']) await expect(page.locator('.weight-chart').getByText(weight, { exact: true })).toBeVisible();
 });
 
 test('keeps demo traffic and storage local @claim:local-private', async ({ page }) => {
@@ -258,14 +340,14 @@ test('keeps route titles, landmarks, links, and console clean', async ({ page })
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
   const routes = [
-    ['/', 'Calorie Week View — Review a week at once'],
-    ['/demo', 'Demo — Calorie Week View'],
-    ['/app', 'Weekly review — Calorie Week View'],
-    ['/privacy', 'Privacy — Calorie Week View'],
-    ['/terms', 'Terms — Calorie Week View'],
-    ['/not-a-route', 'Page not found — Calorie Week View'],
+    ['/', 'Calorie Week View — Review a week at once', 'Review seven days of calories, macros, and weight in one private view.'],
+    ['/demo', 'Demo — Calorie Week View', 'Review your seven-day calorie, macro, and weight pattern.'],
+    ['/app', 'Weekly review — Calorie Week View', 'Review your seven-day calorie, macro, and weight pattern.'],
+    ['/privacy', 'Privacy — Calorie Week View', 'How Calorie Week View stores and protects your local data.'],
+    ['/terms', 'Terms — Calorie Week View', 'Terms for using Calorie Week View.'],
+    ['/not-a-route', 'Page not found — Calorie Week View', 'Return to Calorie Week View.'],
   ];
-  for (const [route, title] of routes) {
+  for (const [route, title, description] of routes) {
     await page.goto(route);
     await expect(page).toHaveTitle(title);
     await expect(page.locator('main')).toHaveCount(1);
@@ -276,6 +358,12 @@ test('keeps route titles, landmarks, links, and console clean', async ({ page })
       return results.filter((result) => !result.ok);
     });
     expect(brokenInternalLinks).toEqual([]);
+    expect(await page.locator('meta[property="og:title"]').getAttribute('content')).toBe(title);
+    expect(await page.locator('meta[name="twitter:title"]').getAttribute('content')).toBe(title);
+    expect(await page.locator('meta[property="og:description"]').getAttribute('content')).toBe(description);
+    expect(await page.locator('meta[name="twitter:description"]').getAttribute('content')).toBe(description);
+    const expectedPath = route === '/not-a-route' ? '/404' : route;
+    expect(await page.locator('meta[property="og:url"]').getAttribute('content')).toBe(`https://calorie-week-view.sociobot.in${expectedPath}`);
   }
   expect(errors).toEqual([]);
 });
@@ -346,6 +434,11 @@ test('the static 404 uses the standard shell and literal copy @regression:404-sh
   await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toHaveCount(1);
   await expect(page.getByRole('contentinfo')).toHaveCount(1);
   await expect(page.getByRole('link', { name: 'Return home' })).toBeVisible();
+  expect(await page.locator('meta[property="og:url"]').getAttribute('content')).toBe('https://calorie-week-view.sociobot.in/404');
+  await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute('content', 'Page not found — Calorie Week View');
+  await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute('content', 'Return to Calorie Week View.');
+  await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute('content', /social-card\.png$/);
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', '/icons/apple-touch-icon.png');
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations.filter((item) => ['serious', 'critical'].includes(item.impact ?? ''))).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
