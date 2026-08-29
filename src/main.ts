@@ -12,7 +12,7 @@ const root = document.querySelector<HTMLDivElement>('#app');
 if (!root) throw new Error('App root is missing.');
 const app: HTMLDivElement = root;
 
-const BUILD_ID = '1.0.5';
+const BUILD_ID = '1.0.6';
 let store: WeekStore | null = null;
 let records: DayRecord[] = [];
 let settings: Settings = { ...DEFAULT_SETTINGS };
@@ -380,7 +380,23 @@ async function handleAction(element: HTMLElement): Promise<void> {
 
 function openDialog(id: string, trigger: HTMLElement): void {
   returnFocus = trigger;
+  if (id === 'settings-dialog') resetSettingsForm();
   document.querySelector<HTMLDialogElement>(`#${id}`)?.showModal();
+}
+
+function resetSettingsForm(): void {
+  const form = document.querySelector<HTMLFormElement>('#settings-form');
+  if (!form) return;
+  const set = (name: string, value: string | number) => {
+    const field = form.elements.namedItem(name);
+    if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) field.value = String(value);
+  };
+  set('calorieMin', settings.calorieMin);
+  set('calorieMax', settings.calorieMax);
+  set('weightUnit', settings.weightUnit);
+  set('theme', settings.theme);
+  const error = form.querySelector<HTMLElement>('#settings-error');
+  if (error) error.textContent = '';
 }
 
 function openEntry(date: string): void {

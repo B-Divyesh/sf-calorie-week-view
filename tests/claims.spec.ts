@@ -14,7 +14,7 @@ test('works offline after the first visit @claim:offline-reload', async ({ page,
   await page.waitForFunction(async () => {
     const script = document.querySelector<HTMLScriptElement>('script[type="module"]')?.src;
     const stylesheet = document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]')?.href;
-    const cache = await caches.open('calorie-week-view-v1.0.7');
+    const cache = await caches.open('calorie-week-view-v1.0.8');
     return Boolean(script && stylesheet && await cache.match(script, { ignoreVary: true }) && await cache.match(stylesheet, { ignoreVary: true }) && await cache.match('/demo', { ignoreVary: true }));
   });
   await context.setOffline(true);
@@ -158,6 +158,29 @@ test('shows all week summary details in the demo @claim:weekly-display', async (
   for (const value of ['119 g', '228 g', '70 g']) await expect(page.getByText(value)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Optional weight trend' })).toBeVisible();
   for (const weight of ['72.8', '72.6', '72.5', '72.3']) await expect(page.locator('.weight-chart').getByText(weight, { exact: true })).toBeVisible();
+});
+
+test('ships the stated source and font licenses @claim:source-font-licensing', async ({ page }) => {
+  const root = process.cwd();
+  const read = (path: string) => readFileSync(resolve(root, path));
+  const sourceLicense = read('LICENSE').toString('utf8');
+  const fontLicense = read('public/fonts/LICENSE.txt').toString('utf8');
+  const readme = read('README.md').toString('utf8');
+
+  expect(sourceLicense).toContain('Copyright (c) 2026 Sociobot (Param Factory)');
+  expect(sourceLicense).toContain('Permission is hereby granted, free of charge');
+  expect(sourceLicense).toContain('THE SOFTWARE IS PROVIDED "AS IS"');
+  expect(fontLicense).toContain('Copyright 2020 Braille Institute of America, Inc.');
+  expect(fontLicense).toContain('SIL OPEN FONT LICENSE Version 1.1');
+  for (const font of ['atkinson-regular.woff2', 'atkinson-bold.woff2']) {
+    expect(read(`public/fonts/${font}`).subarray(0, 4).toString('ascii'), font).toBe('wOF2');
+  }
+  expect(readme).toContain('Source code is MIT licensed.');
+  expect(readme).toContain('SIL Open Font License; its license ships beside the font files.');
+
+  await page.goto('/terms');
+  await expect(page.getByRole('heading', { name: 'License' })).toBeVisible();
+  await expect(page.getByText('The source code is available under the MIT License.')).toBeVisible();
 });
 
 test('records the generated map art source and published files @claim:art-provenance', async ({ page }) => {
@@ -560,7 +583,7 @@ test('reports invalid optional CSV cells and leaves the log unchanged', async ({
   await expect(page.getByText('6 of 7 days logged')).toBeVisible();
 });
 
-test('Cancel and close leave both forms unchanged and restore focus @regression:dialog-cancel', async ({ page }) => {
+test('Cancel, close, and Escape discard form drafts and restore focus @regression:dialog-cancel', async ({ page }) => {
   await page.goto('/demo');
   const missingAdd = page.locator('.entry-row.is-missing').getByRole('button', { name: 'Add' });
 
@@ -587,12 +610,29 @@ test('Cancel and close leave both forms unchanged and restore focus @regression:
   }), missingDate)).toBeUndefined();
 
   const settingsTrigger = page.getByRole('button', { name: 'Change settings' });
-  for (const closeName of ['Cancel', 'Close settings']) {
+  const settingsDialog = page.getByRole('dialog', { name: 'Choose your range' });
+  const closePaths = [
+    { name: 'Cancel', minimum: '1111', maximum: '2222' },
+    { name: 'Close settings', minimum: '1234', maximum: '2345' },
+    { name: 'Escape', minimum: '1357', maximum: '2468' },
+  ];
+  for (const closePath of closePaths) {
     await settingsTrigger.click();
-    const settingsDialog = page.getByRole('dialog', { name: 'Choose your range' });
-    await settingsDialog.getByLabel('Minimum calories').fill(closeName === 'Cancel' ? '1111' : '1234');
-    await settingsDialog.getByLabel('Maximum calories').fill(closeName === 'Cancel' ? '2222' : '2345');
-    await settingsDialog.getByRole('button', { name: closeName }).click();
+    await settingsDialog.getByLabel('Minimum calories').fill(closePath.minimum);
+    await settingsDialog.getByLabel('Maximum calories').fill(closePath.maximum);
+    await settingsDialog.getByLabel('Weight unit').selectOption('lb');
+    await settingsDialog.getByLabel('Color theme').selectOption('dark');
+    if (closePath.name === 'Escape') await page.keyboard.press('Escape');
+    else await settingsDialog.getByRole('button', { name: closePath.name }).click();
+    await expect(settingsDialog).toBeHidden();
+    await expect(settingsTrigger).toBeFocused();
+
+    await settingsTrigger.click();
+    await expect(settingsDialog.getByLabel('Minimum calories')).toHaveValue('1800');
+    await expect(settingsDialog.getByLabel('Maximum calories')).toHaveValue('2200');
+    await expect(settingsDialog.getByLabel('Weight unit')).toHaveValue('kg');
+    await expect(settingsDialog.getByLabel('Color theme')).toHaveValue('system');
+    await page.keyboard.press('Escape');
     await expect(settingsDialog).toBeHidden();
     await expect(settingsTrigger).toBeFocused();
   }

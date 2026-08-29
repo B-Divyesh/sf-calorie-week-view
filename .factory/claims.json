@@ -154,6 +154,13 @@
     "sandbox": "fresh browser context at /demo; assert seven chart days, the 2,062 calorie average, protein/carbs/fat averages, and the three sample weight values"
   },
   {
+    "id": "source-font-licensing",
+    "claim": "The source code is MIT licensed, and the shipped Atkinson Hyperlegible fonts include the SIL Open Font License",
+    "where": "terms page, README",
+    "test": "npm test -- --grep '^.*@claim:source-font-licensing$'",
+    "sandbox": "clean clone and fresh browser context at /terms; verify the public statements, root MIT license text, adjacent SIL font license, and both shipped WOFF2 font files"
+  },
+  {
     "id": "art-provenance",
     "claim": "The map art was generated for this product, with its source, prompt, review, and published derivatives recorded in the repository",
     "where": "landing footer, README",

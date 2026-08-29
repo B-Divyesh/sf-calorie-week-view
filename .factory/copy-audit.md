@@ -47,7 +47,7 @@ exceeds 22 words. No line uses a banned word.
 | Terms | 1 | — |
 | Built by Param Factory | 4 | — |
 | external site | 2 | — |
-| Version 1.0.5 | 2 | — |
+| Version 1.0.6 | 2 | — |
 | Original generated map art | 4 | — |
 
 Read-aloud check: “Review your calories by week. Try it with sample data to see
