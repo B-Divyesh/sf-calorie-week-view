@@ -102,6 +102,12 @@ test('opens a detailed sample week in one click @claim:demo-sample', async ({ pa
   for (const weight of ['72.8', '72.6', '72.5', '72.3']) await expect(page.getByRole('cell', { name: `${weight} kg` })).toBeVisible();
   await expect(page.getByText('Note: Lunch out')).toBeVisible();
   await expect(page.getByText('Note: Dinner with friends')).toBeVisible();
+  await page.goto('/?demo=1');
+  await expect(page).toHaveURL(/\/?demo=1$/);
+  await expect(page.getByLabel('Demo status')).toContainText('sample data, nothing is saved to your log');
+  await expect(page.getByRole('button', { name: 'Reset demo' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start for real' })).toBeVisible();
+  await expect(page.getByText('6 of 7 days logged')).toBeVisible();
 });
 
 test('resets edited demo data to its original sample @claim:demo-reset', async ({ page }) => {

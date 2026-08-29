@@ -127,10 +127,10 @@
   },
   {
     "id": "demo-sample",
-    "claim": "The demo opens six sample days and one missing day with calorie, macro, weight, and note details",
+    "claim": "One click or ?demo=1 opens six sample days and one missing day with calorie, macro, weight, and note details",
     "where": "landing primary-action explanation, demo route, README",
     "test": "npm test -- --grep '^.*@claim:demo-sample$'",
-    "sandbox": "fresh browser context at /; click Try it with sample data once and assert the demo banner, six logged days, missing Saturday, calorie and macro averages, weight trend, and notes"
+    "sandbox": "fresh browser context at /; click Try it with sample data once, then open /?demo=1 directly; assert the banner, reset and exit actions, six logged days, missing Saturday, calorie and macro averages, weight trend, and notes"
   },
   {
     "id": "demo-reset",

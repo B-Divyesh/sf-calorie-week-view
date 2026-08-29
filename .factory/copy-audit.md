@@ -59,4 +59,4 @@ one breath and describes the demo accurately.
 | Calories measurement | kcal |
 
 Catalog description: “Compare seven days of calories, macros, and weight without
-daily scores.” (76 characters)
+daily scores.” (72 characters)

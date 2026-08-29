@@ -11,9 +11,9 @@ no log data to another service. After the first visit, the app can reload offlin
 
 ## Try the demo
 
-Open `/demo` or
-<https://calorie-week-view.sociobot.in/demo>. It loads six sample entries with
-calories, macros, weights, and notes. **Reset demo** restores the sample.
+Open `/?demo=1` or
+<https://calorie-week-view.sociobot.in/?demo=1>. The `/demo` route works too.
+It loads six sample entries with calories, macros, weights, and notes. **Reset demo** restores the sample.
 Choosing **Start for real** discards demo data without copying it to your log.
 
 ## Features
@@ -64,7 +64,7 @@ with `dist/index.html` at its root.
 
 - `/` — product overview and live preview
 - `/app` — real local log
-- `/demo` — isolated sample log
+- `/?demo=1` or `/demo` — isolated sample log
 - `/privacy` — storage and privacy details
 - `/terms` — terms and health boundary
 
