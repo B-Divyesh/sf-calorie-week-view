@@ -1,3 +1,44 @@
+# Handoff — adversarial first-read review 1
+
+## Release decision: FAIL
+
+Reviewed commit `3bbfc7c4bf2a0e9829335b82cba3b2a12017839c` and the byte-matching live
+deployment on August 29, 2026 UTC. No product code was modified.
+
+The cold mobile and desktop first screen, one-click demo, reset, real/demo
+storage isolation, live offline reload, privacy request log, routing, designed
+404, navigation focus, accessibility, touch targets, build, and all 18 declared
+claim commands pass. `npm test` passes 15 unit/contract tests and 29 Chromium
+tests. Initial JS is 12.34 kB gzip.
+
+The verdict is still FAIL under the required zero-finding standard. The review
+records 20 findings: seven claim-manifest/copy-accuracy gaps, one route metadata
+gap, and twelve plain-word copy issues. None is classified as blocking, and no
+earlier V-/V2-/V3-/V4-/V5-series finding regressed.
+
+Full results and exact fixes are in `.factory/review-1.md`.
+
+## Verification
+
+```bash
+npm ci
+npm test
+npm run build
+```
+
+Every command in `.factory/claims.json` was also run separately from the fresh
+clone `/tmp/tmp.tdJppi7Nel/clone`; all 18 passed and selected one browser test.
+Live Playwright checks covered 390×844 and 1440×900, demo isolation with a
+pre-existing real-data sentinel, same-origin request logging, offline reload,
+route metadata/link crawling, route-change focus, axe, and target measurement.
+
+## Left to do
+
+Address F-1-1 through F-1-20 and repeat the entire adversarial checklist. Do not
+add AI or sync solely to close this review; neither is implied by the brief.
+
+---
+
 # Handoff — independent verification 6
 
 ## Release decision: PASS
