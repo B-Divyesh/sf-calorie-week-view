@@ -4,6 +4,8 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+const TEST_ORIGIN = new URL(process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:4173').origin;
+
 test('works offline after the first visit @claim:offline-reload', async ({ page, context }) => {
   await page.goto('/demo');
   await expect(page.getByRole('heading', { name: 'Review your calorie week' })).toBeVisible();
@@ -21,6 +23,26 @@ test('works offline after the first visit @claim:offline-reload', async ({ page,
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Review your calorie week' })).toBeVisible();
   await expect(page.getByText('2,062 kcal')).toBeVisible();
+});
+
+test('installs the current worker and completes an update check @regression:service-worker-update', async ({ page }) => {
+  await page.goto('/demo');
+  await page.waitForFunction(() => navigator.serviceWorker?.controller !== null, null, { timeout: 15_000 }).catch(async () => {
+    await page.reload();
+    await page.waitForFunction(() => navigator.serviceWorker?.controller !== null);
+  });
+  const worker = await page.evaluate(async () => {
+    const registration = await navigator.serviceWorker.ready;
+    await registration.update();
+    return {
+      activeState: registration.active?.state,
+      activeScript: registration.active?.scriptURL,
+      caches: await caches.keys(),
+    };
+  });
+  expect(worker.activeState).toBe('activated');
+  expect(worker.activeScript).toBe(`${TEST_ORIGIN}/sw.js`);
+  expect(worker.caches).toContain('calorie-week-view-v1.0.8');
 });
 
 test('exports the sample log as CSV @claim:csv-export', async ({ page }) => {
@@ -221,7 +243,7 @@ test('records the generated map art source and published files @claim:art-proven
 test('keeps demo traffic and storage local @claim:local-private', async ({ page }) => {
   const externalRequests: string[] = [];
   page.on('request', (request) => {
-    if (new URL(request.url()).origin !== 'http://127.0.0.1:4173') externalRequests.push(request.url());
+    if (new URL(request.url()).origin !== TEST_ORIGIN) externalRequests.push(request.url());
   });
   await page.goto('/demo');
   await page.getByRole('button', { name: 'Add daily totals' }).first().click();
@@ -237,7 +259,7 @@ test('keeps demo traffic and storage local @claim:local-private', async ({ page 
 test('loads no ads, analytics, or third-party scripts @claim:no-ads-tracking-third-party', async ({ page }) => {
   const externalRequests: string[] = [];
   page.on('request', (request) => {
-    if (new URL(request.url()).origin !== 'http://127.0.0.1:4173') externalRequests.push(request.url());
+    if (new URL(request.url()).origin !== TEST_ORIGIN) externalRequests.push(request.url());
   });
   await page.goto('/demo');
   await page.getByRole('button', { name: 'Add daily totals' }).first().click();
@@ -404,8 +426,12 @@ test('has no serious accessibility violations at desktop and 390px mobile', asyn
 
 test('keeps route titles, landmarks, links, and console clean', async ({ page }) => {
   const errors: string[] = [];
+  let expectingNotFoundResponse = false;
   page.on('pageerror', (error) => errors.push(error.message));
-  page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
+  page.on('console', (message) => {
+    const expectedDocument404 = expectingNotFoundResponse && /Failed to load resource: the server responded with a status of 404/.test(message.text());
+    if (message.type() === 'error' && !expectedDocument404) errors.push(message.text());
+  });
   const routes = [
     ['/', 'Calorie Week View — Review a week at once', 'Review seven days of calories, macros, and weight in one private view.'],
     ['/demo', 'Demo — Calorie Week View', 'Review your seven-day calorie, macro, and weight pattern.'],
@@ -415,12 +441,17 @@ test('keeps route titles, landmarks, links, and console clean', async ({ page })
     ['/not-a-route', 'Page not found — Calorie Week View', 'Return to Calorie Week View.'],
   ];
   for (const [route, title, description] of routes) {
+    expectingNotFoundResponse = route === '/not-a-route';
     await page.goto(route);
     await expect(page).toHaveTitle(title);
     await expect(page.locator('main')).toHaveCount(1);
     await expect(page.locator('h1')).toHaveCount(1);
     const brokenInternalLinks = await page.locator('a[href]').evaluateAll(async (links) => {
-      const paths = [...new Set(links.map((link) => (link as HTMLAnchorElement).href).filter((href) => new URL(href).origin === location.origin))];
+      const paths = [...new Set(links
+        .map((link) => link.getAttribute('href'))
+        .filter((href): href is string => Boolean(href) && !href.startsWith('#'))
+        .map((href) => new URL(href, location.href).href)
+        .filter((href) => new URL(href).origin === location.origin))];
       const results = await Promise.all(paths.map(async (href) => ({ href, ok: (await fetch(href)).ok })));
       return results.filter((result) => !result.ok);
     });
