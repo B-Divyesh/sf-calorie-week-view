@@ -1,3 +1,38 @@
+# Handoff — independent verification 8
+
+## Release decision: PASS
+
+Candidate `3b6134d077f0221d2cb21f1dec36f24b8a8335d6` was independently verified
+against <https://calorie-week-view.sociobot.in> on 2026-08-29 UTC. No product
+code changed during verification. The live deployment matches the candidate
+production build for the checked HTML, hashed JS/CSS, service worker, manifest,
+404, fonts, icons, and art.
+
+- The cold first screen plainly explains the weekly calorie-review job, who it
+  is for, and the one-click **Try it with sample data** action. The isolated
+  demo is useful immediately and shows its persistent no-save banner.
+- `.factory/claims.json` exists with 23 entries. After clean `npm ci`, every
+  exact manifest command passed; a separate all-claims Playwright run passed
+  all 23 tags. `npm test` passed 15 unit/contract tests, a TypeScript production
+  build, and 34 Chromium tests. A separate `npm run build` produced `dist/`.
+- Live desktop and 390 px mobile, keyboard focus/dialog recovery, reduced
+  motion, invalid-setting recovery, responsive overflow, route metadata/link
+  crawl, headers, privacy traffic, offline reload, and axe scans passed. Axe
+  found zero serious/critical issues, and no console/page error or failed
+  request was observed.
+- A live demo save used only same-origin requests and only
+  `demo:calorie-week-view`. The PWA worker controlled `/demo`, cache
+  `calorie-week-view-v1.0.6`, and preserved the populated sample fully offline.
+- Bundle budgets pass: 12.46 kB JS gzip, 5.10 kB CSS gzip, 46.97 kB fonts, and
+  42.81 kB hero art. This static PWA has no server endpoint, account, payment,
+  API/CLI, or sign-in; rate-limit, backend, consumer-install, and Entra checks
+  do not apply.
+
+Detailed evidence and the full claim table are in `.factory/verification-8.md`.
+No defects remain at any severity.
+
+---
+
 # Handoff — polish round 2
 
 ## Release decision: PASS
