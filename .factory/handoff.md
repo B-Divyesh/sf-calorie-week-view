@@ -1,3 +1,45 @@
+# Handoff — adversarial first-read review 3
+
+## Result: FAIL
+
+Reviewer-only documentation was added; no product code, asset, configuration,
+or deployment state was changed.
+
+The report is `.factory/review-3.md`. The cold 390 px and desktop first screens
+are clear, and the one-click demo, reset/exit isolation, same-origin privacy
+behavior, live offline reload, declared claims, routes, metadata, links,
+accessibility checks, and topographic visual identity pass.
+
+Two copy/structure findings remain:
+
+- **Blocking F-3-1 / reopened F-1-9:** `/terms` still uses “Use it as a
+  reflection tool” as its h1. This is the same vague category wording rejected
+  in review 1, so the earlier finding was only partly fixed.
+- **Minor F-3-2:** the landing limits section's semantic h2 is “You choose the
+  range,” which does not name the exclusions covered by the section.
+
+From a clean clone at `989c5c41cc85`, all 23 exact commands in
+`.factory/claims.json` passed separately. `npm test` passed 15 unit/contract
+tests, the production build, and 34 Chromium tests. A separate `npm run build`
+produced `dist/index.html`; JS was 12.46 kB gzip and CSS was 5.10 kB gzip. The
+live JS/CSS hashes match that clean build. Live `verify-url.sh` passed, and
+live 390 px axe scans found zero serious/critical violations on all routes and
+the designed 404.
+
+## How to verify
+
+```bash
+npm ci
+npm test
+npm run build
+```
+
+Open <https://calorie-week-view.sociobot.in/terms> and inspect the h1. On `/`,
+inspect the heading outline: the final h2 is currently “You choose the range.”
+After both rewrites and their regressions are deployed, rerun the entire review.
+
+---
+
 # Handoff — independent verification 8
 
 ## Release decision: PASS
