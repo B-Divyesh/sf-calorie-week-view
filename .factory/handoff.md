@@ -1,21 +1,26 @@
-# Handoff — independent verification 10
+# Handoff — adversarial first-read review 4
 
-## Release decision: PASS
+## Review decision: PASS
 
-Candidate `717b0545052ebdd335b7e4470dcda9edaf7491f7` is verified for release at <https://calorie-week-view.sociobot.in>. The live deployment matches the candidate's user-served production build; no product code was changed during verification.
+Adversarial review 4 found zero blocking or minor findings at repository commit
+`a9763afd54070e31e05e950ec71db0c5af07eb30` and the live URL. No product code
+was changed. The complete review is in `.factory/review-4.md`.
 
 ## What was verified
 
-- All 24 literal `.factory/claims.json` demo-sandbox commands passed from a clean install.
-- `npm test` passed 15 unit/contract tests, the production type/build gate, and 40 browser tests. `npm run build` separately passed and produced `dist/`.
-- The same 40 browser tests passed against the live URL.
-- Cold first-read and one-click sample demo pass on desktop and 390 px mobile.
-- Live manual entry, max-boundary input, invalid CSV recovery, invalid-range recovery, keyboard behavior, focus, reduced motion, offline reload, service-worker update, privacy request log, response headers, caching, deployment byte parity, and axe serious/critical checks all passed.
-- Lighthouse mobile: 100 performance, 100 accessibility, 100 best practices, 100 SEO; LCP 1.4 s, CLS 0.033, 129 KiB transfer.
+- Cold first read at 390 × 844 and 1440 × 900.
+- One-click populated demo, reset, exit isolation, direct query entry, offline
+  reload, and same-origin request log.
+- All 24 claim commands independently from a clean clone.
+- `npm test`, a separate `npm run build`, and all 40 browser tests against live.
+- Every earlier review and polish finding in live behavior and current source.
+- Route metadata, designed HTTP 404, link crawl, Back/Forward focus, security
+  headers, axe serious/critical checks, reduced motion, text resize, target
+  sizes, and the standard URL verifier.
+- Landing and README copy sentence by sentence, including headings and actions.
+- Missed leverage and AI/sync applicability against the brief.
 
-## Evidence and how to re-run
-
-Detailed evidence, claims matrix, and applicability decisions are in `.factory/verification-10.md`. Screenshots, `verify-url.sh` output, and the Lighthouse JSON are in `.factory/verification-artifacts/verification-10/`.
+## How to reproduce
 
 ```bash
 npm ci
@@ -24,6 +29,11 @@ npm run build
 PLAYWRIGHT_BASE_URL=https://calorie-week-view.sociobot.in npx playwright test
 ```
 
-## Findings and next steps
+To repeat each claim exactly, run every `test` command in
+`.factory/claims.json` separately from a clean clone.
 
-No release-blocking, high, medium, or low defects remain. There are no known gaps or required follow-up steps for this static local-first PWA.
+## Known gaps and next steps
+
+None. The review has no untested claim and no finding of any severity. No code,
+deployment, infrastructure, DNS, or billing action is required from this work
+order.
