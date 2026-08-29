@@ -1,0 +1,44 @@
+{
+  "verifiedAt": "2026-08-29T12:22:02Z",
+  "url": "https://calorie-week-view.sociobot.in",
+  "deploymentId": "12e11516-3424-4144-8c7b-f0c95fabe83c",
+  "functionalCommit": "4c66d18d9599b8aac2d211de242f2e0047affc6b",
+  "verificationCommit": "f90294c4702ec3a00c0a5ad5e12b45cd57bf55a8",
+  "verifyUrl": {
+    "httpStatus": 200,
+    "loadMs": 666,
+    "consoleErrors": 0,
+    "lang": "en",
+    "h1Count": 1,
+    "main": true,
+    "imagesMissingAlt": 0,
+    "unlabelledButtons": 0
+  },
+  "browserTests": {
+    "localPassed": 40,
+    "livePassed": 40,
+    "viewports": ["desktop", "390x844"],
+    "axeSeriousOrCritical": 0,
+    "offlineReload": true,
+    "serviceWorkerUpdateCheck": true,
+    "activeCache": "calorie-week-view-v1.0.8",
+    "sameOriginOnlyPrivacyFlow": true,
+    "reducedMotion": true,
+    "textResize200Percent": true
+  },
+  "identity": {
+    "servedFilesCompared": 22,
+    "hashMismatches": 0,
+    "unknownRouteStatus": 404
+  },
+  "lighthouseMobile": {
+    "performance": 100,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "fcp": "1.1 s",
+    "lcp": "1.4 s",
+    "tbt": "0 ms",
+    "cls": 0.033
+  }
+}
