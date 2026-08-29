@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-08-29T11:06:00Z",
+  "origin": "https://calorie-week-view.sociobot.in",
+  "routes": [
+    { "path": "/", "status": 200, "title": "Calorie Week View — Review a week at once", "h1": "Review your calories by week" },
+    { "path": "/?demo=1", "status": 200, "title": "Demo — Calorie Week View", "h1": "Review your calorie week" },
+    { "path": "/app", "status": 200, "title": "Weekly review — Calorie Week View", "h1": "Review your calorie week" },
+    { "path": "/privacy", "status": 200, "title": "Privacy — Calorie Week View", "h1": "Your log stays with you" },
+    { "path": "/terms", "status": 200, "title": "Terms — Calorie Week View", "h1": "Terms for Calorie Week View" },
+    { "path": "/offline.html", "status": 200, "title": "Offline — Calorie Week View", "h1": "This page is not available offline" },
+    { "path": "/round-3-final-cold-check", "status": 404, "title": "Page not found — Calorie Week View", "h1": "Page not found" }
+  ],
+  "seriousOrCriticalAxeViolations": 0,
+  "undersizedVisibleTargets": 0,
+  "horizontalOverflows": 0,
+  "successfulPageConsoleOrPageErrors": 0,
+  "requestOrigins": ["https://calorie-week-view.sociobot.in"],
+  "routeAndBackFocus": "pass",
+  "demoReset": "pass",
+  "demoExitIsolation": "pass",
+  "databasesAfterDemoExit": ["calorie-week-view"],
+  "offlineReload": "pass",
+  "deployedAssetHashesMatchCleanBuild": true
+}
