@@ -1,3 +1,77 @@
+# Handoff — polish round 2
+
+## Release decision: PASS
+
+Repair commits `3b9c81955e6bf9b24348661aff2fcd149647a014` and
+`9b53a43ab9d70f572eb4c646a7ae3c617747390a` were pushed to `main`. Version
+1.0.4 was deployed through the static work-order command:
+
+```bash
+/opt/fleet/lib/deploy-static.sh calorie-week-view /work/repo/dist
+```
+
+Azure Static Web Apps deployment `1ec05992-696c-4fc5-a6b9-1a15ef8ae5d8`
+succeeded. The custom domain is
+<https://calorie-week-view.sociobot.in>. The topographic-cartography identity,
+local-first PWA class, and free/no-account scope are unchanged.
+
+### What changed
+
+- Closed F-2-1 with an `art-provenance` claim and exact browser test. A new
+  provenance manifest binds the generated source, prompt, review note, hero
+  PNG/WebP, and social card by SHA-256; the test also proves the page renders
+  the recorded WebP.
+- Extended `@claim:demo-sample` to exercise direct `/?demo=1` as well as the
+  one-click landing action. README and `.factory/demo.md` now make that direct
+  sample URL explicit.
+- Advanced the installed release to 1.0.4 and the service-worker cache to
+  `calorie-week-view-v1.0.6` so installed clients receive the repair.
+- Updated the catalog description to the 72-character verb-first sentence:
+  “Compare seven days of calories, macros, and weight without daily scores.”
+- Rechecked every V-, V2–V5-, F-1-, and F-2-series finding. The complete
+  finding-to-change-to-evidence map is `.factory/polish-2.md`.
+
+### Exact verification
+
+- Fresh clone of final functional commit `9b53a43ab9d7` at
+  `/tmp/calorie-polish2-final.DUaaTC`: `npm ci` passed with 0 vulnerabilities;
+  `npm test` passed 15 unit/contract tests, the production build, and 34
+  Chromium tests.
+- All 23 exact commands in `.factory/claims.json` ran separately from that
+  clone. Each selected one tagged test and all 23 passed, including offline,
+  demo isolation/reset/exit, privacy traffic, import/export, focus, and the new
+  art-provenance contract.
+- `npm run build` produced `dist/index.html`. Initial JavaScript is 36.90 kB
+  raw / 12.46 kB gzip; CSS is 19.42 kB raw / 5.10 kB gzip.
+- Local and live `verify-url.sh` passed with correct title, language, one h1,
+  one main, alt text, button names, and zero console/page errors. Evidence:
+  `.factory/qa-artifacts/polish-2/{local-verify,live-verify}/`.
+- A fresh live 390×844 flow verified the first-screen wording above the fold,
+  one-click `/demo`, direct `/?demo=1`, persistent banner, Reset demo, Start
+  for real, and a preserved real-data sentinel. It observed only same-origin
+  requests and only the correct database after exit. The demo reloaded fully
+  offline from cache `v1.0.6`.
+- Live route checks passed for `/`, `/app`, `/demo`, `/privacy`, and `/terms`:
+  titles, descriptions, canonical URLs, Open Graph/Twitter fields, one h1, and
+  one main all matched. `/round-2-missing-page` returned HTTP 404 with the
+  designed shell. Demo and 404 mobile axe scans had zero serious/critical
+  violations, no horizontal overflow, and no target below 44×44 px.
+- Live Lighthouse 12.8.2 scored **100 performance / 100 accessibility / 100
+  best practices / 100 SEO**, with FCP 1.1 s, LCP 1.4 s, TBT 0 ms, and CLS
+  0.033. Evidence:
+  `.factory/qa-artifacts/polish-2/lighthouse-live-mobile.json`.
+- The live and local JavaScript asset name is `index-BEpsDyFL.js`. The live
+  hero SHA-256 matches the provenance manifest exactly:
+  `45bc3e21b1d662ef9e733ab63719ef3ecad265f426feb2165a97125e5a8cb6c7`.
+
+### Known gaps and next steps
+
+None. No finding of any severity remains unresolved. AI, accounts, sync,
+payments, and backend storage remain intentionally out of scope for this
+deterministic local weekly-review job.
+
+---
+
 # Handoff — independent verification 7
 
 ## Release decision: PASS
